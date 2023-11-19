@@ -11,6 +11,7 @@ func getArgs() error {
 	// Parse config
 	optHelp := getopt.BoolLong("help", 'h', "Help")
 	getopt.BoolLong("verbose", 'v', "Verbosity")
+	getopt.BoolLong("ask", 'a', "Ask before installing/uninstalling")
 	getopt.ListLong("install", 'i', "Package name (for multiple packages, they need to be comma separated without spaces)")
 	getopt.ListLong("uninstall", 'u', "Package name (for multiple packages, they need to be comma separated without spaces)")
 	getopt.Parse()

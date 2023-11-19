@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/pborman/getopt/v2"
+	"log"
 	"os"
 	"strings"
 )
@@ -36,6 +37,23 @@ func main() {
 	// Are we installing or uninstalling ?
 	if installArg != "" {
 		// We are installing
+		// if -a (--ask) is set, we ask for confirmation before continuing
+		if getopt.GetValue("ask") == "true" {
+			log.Printf("Asking the user for confirmation before installing: %s", installArg)
+			var confirmation string
+			fmt.Printf("The following packages are marked for installation : %s\n", installArg)
+			fmt.Printf("Do you want to proceed with those changes: (y/N) ")
+			_, err := fmt.Scanln(&confirmation)
+			if err != nil {
+				log.Println("Quitting...")
+				os.Exit(0)
+			}
+			if confirmation == "y" || confirmation == "Y" {
+			} else {
+				log.Println("Quitting...")
+				os.Exit(0)
+			}
+		}
 		pkgList := strings.Split(installArg, ",")
 		for _, pkg := range pkgList {
 			install(pkg)
@@ -43,6 +61,23 @@ func main() {
 	}
 	if uninstallArg != "" {
 		// We are uninstalling
+		// if -a (--ask) is set, we ask for confirmation before continuing
+		if getopt.GetValue("ask") == "true" {
+			log.Printf("Asking the user for confirmation before uninstalling: %s", uninstallArg)
+			var confirmation string
+			fmt.Printf("The following packages are marked for uninstallation : %s\n", uninstallArg)
+			fmt.Printf("Do you want to proceed with those changes: (y/N) ")
+			_, err := fmt.Scanln(&confirmation)
+			if err != nil {
+				log.Println("Quitting...")
+				os.Exit(0)
+			}
+			if confirmation == "y" || confirmation == "Y" {
+			} else {
+				log.Println("Quitting...")
+				os.Exit(0)
+			}
+		}
 		pkgList := strings.Split(uninstallArg, ",")
 		for _, pkg := range pkgList {
 			uninstall(pkg)
