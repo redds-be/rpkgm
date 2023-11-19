@@ -9,7 +9,7 @@ import (
 
 func install(pkg string) {
 	log.Printf("Installing %s...", pkg)
-	defMakePath := fmt.Sprintf("var/rpkgm/main/%s", pkg)
+	defMakePath := fmt.Sprintf("var/rpkgm/main/%s/binary", pkg)
 	cmd := exec.Command("make")
 	cmd.Dir = defMakePath
 	_, err := cmd.Output()
