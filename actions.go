@@ -8,7 +8,7 @@ import (
 	"os/exec"
 )
 
-func install(pkg string, count int) {
+func install(pkg string, count int, total int) {
 	// Install a package
 	log.Printf("Installing %s...", pkg)
 	// Temporary "hard" coded path for packages
@@ -25,7 +25,7 @@ func install(pkg string, count int) {
 	fmt.Println(string(stdout))
 
 	// Download the package
-	color.Printf(">>> Downloading (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Downloading (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	cmd := exec.Command("make", "dl")
 	cmd.Dir = defMakePath
 	stdout, err = cmd.Output()
@@ -37,7 +37,7 @@ func install(pkg string, count int) {
 	log.Println(string(stdout))
 
 	// Extract the package
-	color.Printf(">>> Extracting (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Extracting (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	cmd = exec.Command("make", "extract")
 	cmd.Dir = defMakePath
 	stdout, err = cmd.Output()
@@ -49,7 +49,7 @@ func install(pkg string, count int) {
 	log.Println(string(stdout))
 
 	// Install the package
-	color.Printf(">>> Installing (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Installing (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	cmd = exec.Command("make", "install")
 	cmd.Dir = defMakePath
 	stdout, err = cmd.Output()
@@ -61,7 +61,7 @@ func install(pkg string, count int) {
 	log.Println(string(stdout))
 
 	// Clean the build directory
-	color.Printf(">>> Cleaning (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Cleaning (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	cmd = exec.Command("make", "clean")
 	cmd.Dir = defMakePath
 	stdout, err = cmd.Output()
@@ -71,17 +71,17 @@ func install(pkg string, count int) {
 		os.Exit(1)
 	}
 	log.Println(string(stdout))
-	color.Printf(">>> Finished installing (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Finished installing (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	log.Printf("Installation done for: %s.", pkg)
 }
 
-func uninstall(pkg string, count int) {
+func uninstall(pkg string, count int, total int) {
 	// Uninstall a package
 	log.Printf("Uninstalling %s...", pkg)
 	defMakePath := fmt.Sprintf("var/rpkgm/main/%s/binary", pkg)
 
 	// Uninstall the package
-	color.Printf(">>> Uninstalling (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Uninstalling (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	cmd := exec.Command("make", "uninstall")
 	cmd.Dir = defMakePath
 	stdout, err := cmd.Output()
@@ -91,6 +91,6 @@ func uninstall(pkg string, count int) {
 		os.Exit(1)
 	}
 	log.Println(string(stdout))
-	color.Printf(">>> Finished uninstalling (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	color.Printf(">>> Finished uninstalling (<yellow>%d</> of <yellow>%d</>) <green>%s</>\n", count, total, pkg)
 	log.Printf("Uninstallation done for: %s.", pkg)
 }

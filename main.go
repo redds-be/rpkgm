@@ -55,8 +55,9 @@ func main() {
 			}
 		}
 		pkgList := strings.Split(installArg, ",")
+		total := len(pkgList)
 		for count, pkg := range pkgList {
-			install(pkg, count+1)
+			install(pkg, count+1, total)
 		}
 	}
 	if uninstallArg != "" {
@@ -79,8 +80,9 @@ func main() {
 			}
 		}
 		pkgList := strings.Split(uninstallArg, ",")
+		total := len(pkgList)
 		for count, pkg := range pkgList {
-			uninstall(pkg, count+1)
+			uninstall(pkg, count+1, total)
 		}
 	}
 }
