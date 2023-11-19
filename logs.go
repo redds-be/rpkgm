@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"github.com/pborman/getopt/v2"
+	"io"
 	"log"
 	"os"
 )
@@ -15,8 +17,13 @@ func openLogFile(path string) (*os.File, error) {
 }
 
 func confLog(logFile *os.File) {
-	log.SetOutput(logFile)
-	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
+	if getopt.GetValue("verbose") == "true" {
+		stdoutAndLogFile := io.MultiWriter(os.Stdout, logFile)
+		log.SetOutput(stdoutAndLogFile)
+	} else {
+		log.SetOutput(logFile)
+	}
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 }
 
 func closeLogs(logFile *os.File) {
