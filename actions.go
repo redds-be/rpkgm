@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/gookit/color"
 	"log"
 	"os"
 	"os/exec"
 )
 
-func install(pkg string) {
+func install(pkg string, count int) {
 	// Install a package
 	log.Printf("Installing %s...", pkg)
 	// Temporary "hard" coded path for packages
@@ -23,8 +24,33 @@ func install(pkg string) {
 	}
 	fmt.Println(string(stdout))
 
-	// Build and install the package
-	cmd := exec.Command("make")
+	// Download the package
+	color.Printf(">>> Downloading (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	cmd := exec.Command("make", "dl")
+	cmd.Dir = defMakePath
+	stdout, err = cmd.Output()
+	if err != nil {
+		log.Printf("Failed to download '%s': %s", pkg, err)
+		fmt.Printf("Failed to download '%s': %s", pkg, err)
+		os.Exit(1)
+	}
+	log.Println(string(stdout))
+
+	// Extract the package
+	color.Printf(">>> Extracting (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	cmd = exec.Command("make", "extract")
+	cmd.Dir = defMakePath
+	stdout, err = cmd.Output()
+	if err != nil {
+		log.Printf("Failed to extract '%s': %s", pkg, err)
+		fmt.Printf("Failed to extract '%s': %s", pkg, err)
+		os.Exit(1)
+	}
+	log.Println(string(stdout))
+
+	// Install the package
+	color.Printf(">>> Installing (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	cmd = exec.Command("make", "install")
 	cmd.Dir = defMakePath
 	stdout, err = cmd.Output()
 	if err != nil {
@@ -33,15 +59,29 @@ func install(pkg string) {
 		os.Exit(1)
 	}
 	log.Println(string(stdout))
+
+	// Clean the build directory
+	color.Printf(">>> Cleaning (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
+	cmd = exec.Command("make", "clean")
+	cmd.Dir = defMakePath
+	stdout, err = cmd.Output()
+	if err != nil {
+		log.Printf("Failed to clean '%s': %s", pkg, err)
+		fmt.Printf("Failed to clean '%s': %s", pkg, err)
+		os.Exit(1)
+	}
+	log.Println(string(stdout))
+	color.Printf(">>> Finished installing (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
 	log.Printf("Installation done for: %s.", pkg)
 }
 
-func uninstall(pkg string) {
+func uninstall(pkg string, count int) {
 	// Uninstall a package
 	log.Printf("Uninstalling %s...", pkg)
 	defMakePath := fmt.Sprintf("var/rpkgm/main/%s/binary", pkg)
 
 	// Uninstall the package
+	color.Printf(">>> Uninstalling (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
 	cmd := exec.Command("make", "uninstall")
 	cmd.Dir = defMakePath
 	stdout, err := cmd.Output()
@@ -51,5 +91,6 @@ func uninstall(pkg string) {
 		os.Exit(1)
 	}
 	log.Println(string(stdout))
+	color.Printf(">>> Finished uninstalling (<yellow>1</> of <yellow>%d</>) <green>%s</>\n", count, pkg)
 	log.Printf("Uninstallation done for: %s.", pkg)
 }
