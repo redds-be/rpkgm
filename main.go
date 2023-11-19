@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Checking if rpkgm is running as root and testing network connectivity
-	doChecks()
+	earlyChecks()
 
 	// Parse the config
 	conf, err := getConf()
