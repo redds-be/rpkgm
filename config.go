@@ -11,6 +11,7 @@ type Conf struct {
 }
 
 func getConf() (Conf, error) {
+	// Parse the config file
 	config.WithOptions(config.ParseEnv)
 	config.AddDriver(yaml.Driver)
 	err := config.LoadFiles("etc/rpkgm.yaml")
@@ -18,6 +19,7 @@ func getConf() (Conf, error) {
 		return Conf{}, err
 	}
 	confData := config.Data()
+	// Get the conf values into a struct
 	conf := Conf{
 		logFile: confData["logFile"].(string),
 		verbose: confData["verbose"].(bool),

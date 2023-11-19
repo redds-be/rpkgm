@@ -9,6 +9,7 @@ import (
 )
 
 func openLogFile(path string) (*os.File, error) {
+	// Open/Create the log file
 	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, errors.New("could not open log file")
@@ -17,6 +18,7 @@ func openLogFile(path string) (*os.File, error) {
 }
 
 func confLog(logFile *os.File, verbose bool) {
+	// Write the logs to a file and to stdout if verbosity is set
 	if getopt.GetValue("verbose") == "true" {
 		stdoutAndLogFile := io.MultiWriter(os.Stdout, logFile)
 		log.SetOutput(stdoutAndLogFile)
@@ -30,6 +32,7 @@ func confLog(logFile *os.File, verbose bool) {
 }
 
 func closeLogs(logFile *os.File) {
+	// Close the logs file
 	err := logFile.Close()
 	if err != nil {
 		log.Printf("Could not close the log file: '%s': %s", logFile.Name(), err)
@@ -38,6 +41,7 @@ func closeLogs(logFile *os.File) {
 }
 
 func handleLogs(path string, verbose bool) *os.File {
+	// Driver for openLogFile() and confLog()
 	logFile, err := openLogFile(path)
 	if err != nil {
 		log.Printf("Could not open the log file '%s': %s", path, err)

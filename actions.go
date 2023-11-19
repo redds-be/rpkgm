@@ -8,6 +8,7 @@ import (
 )
 
 func install(pkg string) {
+	// Install a package
 	log.Printf("Installing %s...", pkg)
 	defMakePath := fmt.Sprintf("var/rpkgm/main/%s/binary", pkg)
 	cmd := exec.Command("make")
@@ -21,6 +22,7 @@ func install(pkg string) {
 }
 
 func uninstall(pkg string) {
+	// Uninstall a package
 	log.Printf("Uninstalling %s...", pkg)
 	defMakePath := fmt.Sprintf("var/rpkgm/main/%s", pkg)
 	cmd := exec.Command("make", "uninstall")
