@@ -1,12 +1,19 @@
 package main
 
 import (
-	"fmt"
 	"github.com/pborman/getopt/v2"
+	"log"
 	"os"
 )
 
 func main() {
+	// Temporary path
+	path := "/var/log/rpkgm.log"
+
+	logFile := handleLogs(path)
+	defer closeLogs(logFile)
+	log.Println("Starting rpkgm...")
+
 	err := getArgs()
 	if err != nil {
 		getopt.Usage()
@@ -17,10 +24,8 @@ func main() {
 	uninstallArg := getopt.GetValue("uninstall")
 
 	if installArg != "" {
-		fmt.Printf("Installing %s...\n", installArg)
 		install(installArg)
 	} else if uninstallArg != "" {
-		fmt.Printf("Uninstalling %s...\n", uninstallArg)
 		uninstall(uninstallArg)
 	}
 }
