@@ -1,6 +1,6 @@
-# redd-go-template
+# rpkgm
 
-A template for my go projects. It contains both my default contributing guideline and my default licensing message.
+redd's package manager written in Go.
 
 ## Contributing
 
