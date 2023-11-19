@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pborman/getopt/v2"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -32,9 +33,16 @@ func main() {
 	// Are we installing or uninstalling ?
 	if installArg != "" {
 		// We are installing
-		install(installArg)
-	} else if uninstallArg != "" {
+		pkgList := strings.Split(installArg, ",")
+		for _, pkg := range pkgList {
+			install(pkg)
+		}
+	}
+	if uninstallArg != "" {
 		// We are uninstalling
-		uninstall(uninstallArg)
+		pkgList := strings.Split(uninstallArg, ",")
+		for _, pkg := range pkgList {
+			uninstall(pkg)
+		}
 	}
 }
