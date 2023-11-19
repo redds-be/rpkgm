@@ -1,0 +1,2 @@
+logFile: /var/log/rpkgm.log
+verbose: false
