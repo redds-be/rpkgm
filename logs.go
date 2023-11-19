@@ -16,8 +16,11 @@ func openLogFile(path string) (*os.File, error) {
 	return logFile, nil
 }
 
-func confLog(logFile *os.File) {
+func confLog(logFile *os.File, verbose bool) {
 	if getopt.GetValue("verbose") == "true" {
+		stdoutAndLogFile := io.MultiWriter(os.Stdout, logFile)
+		log.SetOutput(stdoutAndLogFile)
+	} else if verbose {
 		stdoutAndLogFile := io.MultiWriter(os.Stdout, logFile)
 		log.SetOutput(stdoutAndLogFile)
 	} else {
@@ -34,12 +37,12 @@ func closeLogs(logFile *os.File) {
 	}
 }
 
-func handleLogs(path string) *os.File {
+func handleLogs(path string, verbose bool) *os.File {
 	logFile, err := openLogFile(path)
 	if err != nil {
 		log.Printf("Could not open the log file '%s': %s", path, err)
 		os.Exit(1)
 	}
-	confLog(logFile)
+	confLog(logFile, verbose)
 	return logFile
 }

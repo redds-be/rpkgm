@@ -1,21 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"github.com/pborman/getopt/v2"
 	"os"
 )
 
 func main() {
 	// Temporary path
-	path := "/var/log/rpkgm.log"
+	conf, err := getConf()
+	if err != nil {
+		fmt.Printf("Coudln't parse the configuration file %s", err)
+		os.Exit(1)
+	}
 
-	err := getArgs()
+	err = getArgs()
 	if err != nil {
 		getopt.Usage()
 		os.Exit(0)
 	}
 
-	logFile := handleLogs(path)
+	logFile := handleLogs(conf.logFile, conf.verbose)
 	defer closeLogs(logFile)
 
 	installArg := getopt.GetValue("install")
