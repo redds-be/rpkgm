@@ -15,7 +15,9 @@ func main() {
 
 	if optType == "install" {
 		fmt.Printf("Installing %s...\n", *pkg)
-	} else if optType != "uninstall" {
+		install(pkg)
+	} else if optType == "uninstall" {
 		fmt.Printf("Uninstalling %s...\n", *pkg)
+		uninstall(pkg)
 	}
 }
