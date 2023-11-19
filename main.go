@@ -7,17 +7,20 @@ import (
 )
 
 func main() {
-	pkg, optType, err := getArgs()
+	err := getArgs()
 	if err != nil {
 		getopt.Usage()
 		os.Exit(0)
 	}
 
-	if optType == "install" {
-		fmt.Printf("Installing %s...\n", *pkg)
-		install(pkg)
-	} else if optType == "uninstall" {
-		fmt.Printf("Uninstalling %s...\n", *pkg)
-		uninstall(pkg)
+	installArg := getopt.GetValue("install")
+	uninstallArg := getopt.GetValue("uninstall")
+
+	if installArg != "" {
+		fmt.Printf("Installing %s...\n", installArg)
+		install(installArg)
+	} else if uninstallArg != "" {
+		fmt.Printf("Uninstalling %s...\n", uninstallArg)
+		uninstall(uninstallArg)
 	}
 }

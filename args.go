@@ -6,26 +6,26 @@ import (
 	"github.com/pborman/getopt/v2"
 )
 
-func getArgs() (*string, string, error) {
+func getArgs() error {
 	optInstall := getopt.StringLong("install", 'i', "", "Package name")
 	optUninstall := getopt.StringLong("uninstall", 'u', "", "Package name")
 	optHelp := getopt.BoolLong("help", 'h', "Help")
 	getopt.Parse()
 
 	if *optHelp {
-		return nil, "", errors.New("an unexpected error occurred")
+		return errors.New("an unexpected error occurred")
 	}
 
 	if *optInstall != "" && *optUninstall != "" {
 		fmt.Println("The options -i (--install) and -u (--uninstall) are mutually exclusive.")
-		return nil, "", errors.New("-i and -u are mutually exclusive")
+		return errors.New("-i and -u are mutually exclusive")
 	}
 
 	if *optInstall != "" {
-		return optInstall, "install", nil
+		return nil
 	} else if *optUninstall != "" {
-		return optUninstall, "uninstall", nil
+		return nil
 	} else {
-		return nil, "", errors.New("an unexpected error occurred")
+		return errors.New("an unexpected error occurred")
 	}
 }
