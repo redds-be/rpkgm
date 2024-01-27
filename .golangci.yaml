@@ -31,6 +31,8 @@ linters-settings:
           - $test
         allow:
           - $gostd
+          - github.com/redds-be/rpkgm/cmd
+          - github.com/spf13/cobra
   # Default values conflicts with gofmt
   lll:
     line-length: 160

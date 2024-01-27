@@ -16,11 +16,8 @@
 
 package main
 
-import (
-	"log"
-)
+import "github.com/redds-be/rpkgm/cmd"
 
-// main drives the application.
 func main() {
-	log.Println("WIP")
+	cmd.Execute()
 }
