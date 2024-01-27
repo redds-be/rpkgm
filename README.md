@@ -1,36 +1,34 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
 
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/redds-be/redd-go-template">
-    <img src="https://go.dev/blog/go-brand/Go-Logo/PNG/Go-Logo_LightBlue.png" alt="Logo" width="128" height="128">
+  <a href="https://github.com/redds-be/rpkgm">
+    <img src=".github/rpkgm_logo.svg" alt="Logo" width="128" height="128">
   </a>
 
-<h3 align="center">redd's Go Template</h3>
+<h3 align="center">rpkgm</h3>
 
   <p align="center">
-    A template for my go projects.
+    redd's package manager.
     <br />
     <br />
     <a href="#">View Demo</a>
     ·
-    <a href="https://github.com/redds-be/redd-go-template/issues">Report Bug</a>
+    <a href="https://github.com/redds-be/rpkgm/issues">Report Bug</a>
     ·
-    <a href="https://github.com/redds-be/redd-go-template/issues">Request Feature</a>
+    <a href="https://github.com/redds-be/rpkgm/issues">Request Feature</a>
   </p>
 </div>
 
 <!-- PROJECT SHIELDS -->
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/redd-go-template/golangci-lint.yml?label=Golangci-lint)
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/redd-go-template/gotest.yml?label=Go%20test)
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/redd-go-template/gobuild.yml?label=Go%20build)
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/redd-go-template/docker-build-test.yml?label=Docker%20build)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/redds-be/redd-go-template)
-![GitHub issues](https://img.shields.io/github/issues/redds-be/redd-go-template)
-![GitHub License](https://img.shields.io/github/license/redds-be/redd-go-template)
-![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/redds-be/redd-go-template)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/rpkgm/golangci-lint.yml?label=Golangci-lint)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/rpkgm/gotest.yml?label=Go%20test)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/rpkgm/gobuild.yml?label=Go%20build)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/redds-be/rpkgm)
+![GitHub issues](https://img.shields.io/github/issues/redds-be/rpkgm)
+![GitHub License](https://img.shields.io/github/license/redds-be/rpkgm)
+![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/redds-be/rpkgm)
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -38,35 +36,23 @@
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#features">Features</a></li>
-    <li>
-        <a href="#usage">Usage</a>
-        <ul>
-            <li><a href="#source">Source</a></li>
-            <li><a href="#docker">Docker</a></li>
-        </ul>
-    </li>
+    <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
-## About redd-go-template
+## About rpkgm
 
-A template for my go projects. It contains everything I need to start a new Go project.
-
-This template (helloworld) is an example of a [hexagonal architecture](https://medium.com/@matiasvarela/hexagonal-architecture-in-go-cfd4e436faa3) implementation.
+Just wanted to create my own package manager because why not?
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Features
 
-- A `Hello, World!` message.
-- HTTP server to serve the `Hello, World!` at "/" endpoint
-- sqlite database to keep track of the history (date+helloworld)
+- Nothing related to package managing yet.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -75,28 +61,12 @@ This template (helloworld) is an example of a [hexagonal architecture](https://m
 
 ### Source
 
-Just run it:
-
-```console
-user@host:~$ go run cmd/main.go
-```
-
-Or compile and run it:
-
-```console
-user@host:~$ go build -o helloworld cmd/main.go && ./helloworld
-```
-
-### Docker
-
-See [docker instruction](docker/).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+- Don't use it at this stage.
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Upgrade the template
+- [ ] Manage packages
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

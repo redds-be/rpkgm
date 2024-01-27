@@ -17,4 +17,4 @@ jobs:
           cache: false
       - name: Build the project
         run: |
-          go build cmd/main.go
+          go build main.go
