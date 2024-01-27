@@ -1,4 +1,4 @@
-//    redd-go-template, a template for go projects.
+//    rpkgm, redd's package manager.
 //    Copyright (C) 2024 redd
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -14,28 +14,13 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package api
+package main
 
-import "github.com/redds-be/redd-go-template/internal/ports"
+import (
+	"log"
+)
 
-type Application struct {
-	dbase ports.DBPort
-	hello Helloworld
-}
-
-// NewApplication creates a new Application.
-func NewApplication(dbase ports.DBPort, hello Helloworld) *Application {
-	return &Application{dbase: dbase, hello: hello}
-}
-
-// GetHelloWorld gets the hello world message.
-func (apia Application) GetHelloWorld() (string, error) {
-	message := apia.hello.HelloWorld()
-
-	err := apia.dbase.AddToHistory(message)
-	if err != nil {
-		return "", err
-	}
-
-	return message, nil
+// main drives the application.
+func main() {
+	log.Println("WIP")
 }
