@@ -10,7 +10,7 @@
 <h3 align="center">rpkgm</h3>
 
   <p align="center">
-    redd's package manager written in Go.
+    redd's package manager.
     <br />
     <br />
     <a href="#">View Demo</a>
