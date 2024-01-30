@@ -19,6 +19,8 @@ linters:
     - exhaustruct
     # Although useful, sometimes I need to return with errors before ending the functions
     - wrapcheck
+    # I need some globals
+    - gochecknoglobals
 
 linters-settings:
   # Packages allowed
@@ -32,7 +34,13 @@ linters-settings:
         allow:
           - $gostd
           - github.com/redds-be/rpkgm/cmd
+          - github.com/redds-be/rpkgm/internal/pkg
+          - github.com/redds-be/rpkgm/internal/util
+          - github.com/redds-be/rpkgm/internal/pkg
+          - github.com/redds-be/rpkgm/internal/database
           - github.com/spf13/cobra
+          - github.com/google/uuid
+          - github.com/mattn/go-sqlite3
   # Default values conflicts with gofmt
   lll:
     line-length: 160

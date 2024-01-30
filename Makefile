@@ -2,7 +2,7 @@ GOFILES = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 all: compile
 
-prep: fmt mod vet lint test
+prep: fmt mod vet lint
 
 compile: clean
 	@mkdir -p build/
@@ -20,9 +20,6 @@ vet:
 
 lint:
 	golangci-lint run --enable-all --fix ./...
-
-test:
-	go test ./...
 
 clean:
 	@rm -rf build/

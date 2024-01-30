@@ -14,16 +14,40 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-module github.com/redds-be/rpkgm
+package util
 
-go 1.21
-
-require (
-	github.com/mattn/go-sqlite3 v1.14.20
-	github.com/spf13/cobra v1.8.0
+import (
+	"fmt"
+	"io"
+	"os"
+	"os/user"
 )
 
-require (
-	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+// Define some colors.
+var (
+	Rc = "\033[0m"
+	By = "\033[1m\033[33m"
+	Bg = "\033[1m\033[32m"
 )
+
+// CheckRoot checks if the user is root.
+func CheckRoot() {
+	currUser, err := user.Current()
+	if err != nil {
+		Display(os.Stderr, "Unable to determine if rpkgm is running as root.")
+		os.Exit(1)
+	}
+
+	if currUser.Uid != "0" {
+		Display(os.Stderr, "Please run rpkgm as root.")
+		os.Exit(1)
+	}
+}
+
+// Display is wrapper over fmt.Fprintf.
+func Display(out io.Writer, format string, toDisplay ...any) {
+	_, err := fmt.Fprintf(out, fmt.Sprintf("%s\n", format), toDisplay...)
+	if err != nil {
+		fmt.Println("rpkgm was unable to print output...") //nolint:forbidigo
+	}
+}
