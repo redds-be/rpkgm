@@ -18,14 +18,24 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	"io"
+	"os"
 
+	"github.com/redds-be/rpkgm/internal/database"
+	"github.com/redds-be/rpkgm/internal/util"
 	"github.com/spf13/cobra"
 )
 
-var showNotice bool //nolint:gochecknoglobals
+// Global vars for booleans acting as toggles.
+var (
+	showNotice  bool
+	showLicense bool
+	showInfo    bool
+	showAll     bool
+)
 
-const notice = `rpgkm: redd's package manager.
+// copyright/warranty notice.
+const notice = `rpgkm, redd's package manager.
 Copyright (C) 2024 redd
 
 This program is free software: you can redistribute it and/or modify
@@ -46,24 +56,190 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Use:   "show",
 	Short: "Show license related informations",
 	Run: func(cmd *cobra.Command, args []string) {
+		// show rpkgm's warranty notice
 		if showNotice {
-			fmt.Println(notice) //nolint:forbidigo
-		} else {
+			util.Display(os.Stdout, "%s", notice)
+			os.Exit(0)
+		}
+
+		// Connect to the database
+		dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
+		if err != nil {
+			util.Display(os.Stderr, "rpkgm could connect to the repo's database. Error: %s", err)
+			os.Exit(1)
+		}
+
+		if showAll {
+			// Get every package info in the database
+			allPkgInfo, err := dbAdapter.GetAllPkgInfo()
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm could query the repo's database. Error: %s", err)
+				os.Exit(1)
+			}
+
+			// For every package, display the info (changes depending on the installation status)
+			for _, pkgInfo := range allPkgInfo {
+				if pkgInfo.Installed {
+					util.Display(
+						os.Stdout,
+						"%s [Installed (%s)]\t- %s\t- Repo's version: %s",
+						pkgInfo.Name,
+						pkgInfo.InstalledVersion,
+						pkgInfo.Description,
+						pkgInfo.RepoVersion,
+					)
+				} else {
+					util.Display(os.Stdout, "%s [Not installed]\t- %s\t- Repo's version: %s", pkgInfo.Name, pkgInfo.Description, pkgInfo.RepoVersion)
+				}
+			}
+
+			// Close the database
+			err = dbAdapter.CloseDBConnection()
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				os.Exit(1)
+			}
+
+			os.Exit(0)
+		}
+
+		// The following operations require a package name, error if there isn't
+		if name == "" {
+			// Display help
+			util.Display(os.Stderr, "Error: you need to specify a package with --name/-n first.")
 			err := cmd.Help()
 			if err != nil {
-				log.Fatal(err)
+				util.Display(os.Stderr, "rpkgm could not display the help message. Error: %s", err)
+				os.Exit(1)
 			}
+
+			// Close the database
+			err = dbAdapter.CloseDBConnection()
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				os.Exit(1)
+			}
+			os.Exit(1)
+		}
+
+		// Check if the package is in the repo, error this is not the case
+		isInRepo, _ := dbAdapter.IsPkgInRepo(name)
+		if !isInRepo {
+			util.Display(os.Stderr, "The package: %s is not in repository.", name)
+
+			// Close the database
+			err = dbAdapter.CloseDBConnection()
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				os.Exit(1)
+			}
+			os.Exit(1)
+		}
+
+		if showLicense {
+			// Find the build files for the given package, the license should be in there
+			buildFilesDir, err = dbAdapter.GetPkgBuildFilesDir(name)
+			if err != nil {
+				util.Display(
+					os.Stderr,
+					"rpkgm could not find the build files (build files includes the license) for the given package. Error: %s",
+					err,
+				)
+				os.Exit(1)
+			}
+
+			// Open the license file
+			licenseFile, err := os.Open(fmt.Sprintf("%s/LICENSE", buildFilesDir))
+			if err != nil {
+				util.Display(
+					os.Stderr,
+					"rpkgm could not open or find the license file for the given package. Error: %s",
+					err,
+				)
+				os.Exit(1)
+			}
+
+			// Defer the closing of the license file
+			defer func(licenseFile *os.File) {
+				err := licenseFile.Close()
+				if err != nil {
+					util.Display(
+						os.Stderr,
+						"rpkgm could not close the license file for the given package. Error: %s",
+						err,
+					)
+					os.Exit(1)
+				}
+			}(licenseFile)
+
+			// Read the license file
+			licenseContent, err := io.ReadAll(licenseFile)
+			if err != nil {
+				util.Display(
+					os.Stderr,
+					"rpkgm could not read from the license file of the given package. Error: %s",
+					err,
+				)
+				os.Exit(1)
+			}
+
+			// Print the license file's content
+			util.Display(os.Stdout, "%v", string(licenseContent))
+		}
+
+		if showInfo {
+			// Get the given package's general info
+			pkgInfo, err := dbAdapter.GetPkgInfo(name)
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm could not get the given package's information. Error: %s", err)
+				os.Exit(1)
+			}
+
+			// Display the general info (changes depending on the installation status)
+			if pkgInfo.Installed {
+				util.Display(
+					os.Stdout,
+					"%s [Installed (%s)]\t- %s\t- Repo's version: %s",
+					pkgInfo.Name,
+					pkgInfo.InstalledVersion,
+					pkgInfo.Description,
+					pkgInfo.RepoVersion,
+				)
+			} else {
+				util.Display(os.Stdout, "%s [Not installed]\t- %s\t- Repo's version: %s", pkgInfo.Name, pkgInfo.Description, pkgInfo.RepoVersion)
+			}
+		}
+
+		// Close the database connection
+		err = dbAdapter.CloseDBConnection()
+		if err != nil {
+			util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+			os.Exit(1)
 		}
 	},
 }
 
-// init defines flags.
-//
-//nolint:gochecknoinits
-func init() {
+// init initializes the command-line arguments for cobra.
+func init() { //nolint:gochecknoinits
 	// Link to root (root = 'rpkgm', show = 'rpkgm show')
 	rootCmd.AddCommand(showCmd)
 
-	// --warranty or -w is used to print the GPLv3 warranty notice.
+	// --warranty or -w is used to print the GPLv3 warranty notice
 	showCmd.Flags().BoolVarP(&showNotice, "warranty", "w", false, "Show warranty.")
+
+	// Flag to select a package to show things
+	showCmd.Flags().StringVarP(&name, "name", "n", "", "Package to select.")
+
+	// Flag to show a given package's license
+	showCmd.Flags().BoolVarP(&showLicense, "license", "l", false, "Show a given package's license.")
+
+	// Flag to show a given package's general information.
+	showCmd.Flags().BoolVarP(&showInfo, "info", "i", false, "Show a given package's general information.")
+
+	// Flag to show every packages general information.
+	showCmd.Flags().BoolVarP(&showAll, "all", "a", false, "Show every package's general information.")
+
+	// Optional flag to specify repo database location
+	showCmd.Flags().
+		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main.db", "Specify repo Database location (Defaults to /var/rpkgm/main.db).")
 }

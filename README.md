@@ -52,21 +52,26 @@ Just wanted to create my own package manager because why not?
 
 ## Features
 
-- Nothing related to package managing yet.
+- Repository management
+- Install packages
+- Uninstall packages
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-### Source
-
-- Don't use it at this stage.
+- Kind of usable, but do not use it at this stage.
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Manage packages
+- [ ] Import records from a file into the database.
+- [ ] Logging.
+- [ ] Update packages.
+- [ ] Manage dependencies.
+- [ ] Use a config file.
+- [ ] Write documentation.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
