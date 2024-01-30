@@ -23,7 +23,6 @@
 
 <!-- PROJECT SHIELDS -->
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/rpkgm/golangci-lint.yml?label=Golangci-lint)
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/rpkgm/gotest.yml?label=Go%20test)
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/redds-be/rpkgm/gobuild.yml?label=Go%20build)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/redds-be/rpkgm)
 ![GitHub issues](https://img.shields.io/github/issues/redds-be/rpkgm)
