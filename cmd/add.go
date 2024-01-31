@@ -17,8 +17,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"strings"
 
@@ -33,6 +34,7 @@ var (
 	description   string
 	version       string
 	buildFilesDir string
+	importFile    string
 )
 
 // addCmd represents the add command.
@@ -58,25 +60,106 @@ var addCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Default value for buildFilesDir (doing it here instead of Flags() because I need 'name')
-		if buildFilesDir == "" {
-			buildFilesDir = fmt.Sprintf("var/rpkgm/main/%s", name)
+		// If the user imports a file, add the packages described in it
+		if importFile != "" {
+			// Open the file to import
+			jsonPkgFile, err := os.Open(importFile)
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm couldn't open the json file. Error: %s", err)
+				os.Exit(1)
+			}
+
+			// Read the file's content
+			contentInbytes, err := io.ReadAll(jsonPkgFile)
+			if err != nil {
+				util.Display(
+					os.Stderr,
+					"rpkgm couldn't read the json file's content. Error: %s",
+					err,
+				)
+				os.Exit(1)
+			}
+
+			// Initialize the Packages struct
+			var pkgs database.Packages
+
+			// Read the json content of the file
+			err = json.Unmarshal(contentInbytes, &pkgs)
+			if err != nil {
+				util.Display(os.Stderr, "rpkgm couldn't read the json file. Error: %s", err)
+				os.Exit(1)
+			}
+
+			// for every package in the json file, add it to the repo
+			for index := 0; index < len(pkgs.Packages); index++ {
+				// If there isn't a description, give one by default
+				if pkgs.Packages[index].Description == "" {
+					pkgs.Packages[index].Description = "[No description provided for this package.]"
+				}
+
+				// If there isn't a build files dir, give one by default
+				if pkgs.Packages[index].BuildFilesDir == "" {
+					pkgs.Packages[index].BuildFilesDir = fmt.Sprintf(
+						"var/rpkgm/main/%s",
+						pkgs.Packages[index].Name,
+					)
+				}
+
+				// Add the package to the repo
+				err = dbAdapter.AddToMainRepo(
+					pkgs.Packages[index].Name,
+					pkgs.Packages[index].Description,
+					pkgs.Packages[index].Version,
+					pkgs.Packages[index].BuildFilesDir,
+				)
+				if err != nil {
+					util.Display(
+						os.Stderr,
+						"rpkgm was unable to add %s to the repo. Error: %s",
+						pkgs.Packages[index].Name,
+						err,
+					)
+				}
+			}
+
+			// Close the json file
+			err = jsonPkgFile.Close()
+			if err != nil {
+				util.Display(os.Stderr, "rpgkm couln't close the json file. Error: %s", err)
+				os.Exit(1)
+			}
 		}
 
-		// Remove any trailing /
-		buildFilesDir = strings.TrimSuffix(buildFilesDir, "/")
+		// If there's at least a name and a version, add the package
+		if name != "" && version != "" {
+			// Default value for buildFilesDir (doing it here instead of Flags() because I need 'name')
+			if buildFilesDir == "" {
+				buildFilesDir = fmt.Sprintf("var/rpkgm/main/%s", name)
+			}
 
-		// Add the package to the main repo
-		err = dbAdapter.AddToMainRepo(name, description, version, buildFilesDir)
-		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not add the package to the repo. Error: %s", err)
-			os.Exit(1)
+			// Remove any trailing /
+			buildFilesDir = strings.TrimSuffix(buildFilesDir, "/")
+
+			// Add the package to the main repo
+			err = dbAdapter.AddToMainRepo(name, description, version, buildFilesDir)
+			if err != nil {
+				util.Display(
+					os.Stderr,
+					"rpkgm could not add the package to the repo. Error: %s",
+					err,
+				)
+				os.Exit(1)
+			}
 		}
 
 		// Close the database connection
 		err = dbAdapter.CloseDBConnection()
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+			util.Display(
+				os.Stderr,
+				"rpkgm could not close the connection to the database. Error: %s",
+				err,
+			)
 			os.Exit(1)
 		}
 	},
@@ -90,20 +173,11 @@ func init() { //nolint:gochecknoinits
 	// Package name
 	addCmd.Flags().StringVarP(&name, "name", "n", "", "Name of the package to add.")
 
-	// Name is required
-	err := addCmd.MarkFlagRequired("name")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Package version
 	addCmd.Flags().StringVarP(&version, "version", "v", "", "Version of the package to add.")
 
-	// Version is required
-	err = addCmd.MarkFlagRequired("version")
-	if err != nil {
-		log.Fatal(err)
-	}
+	// If name is used, then version should be used too
+	addCmd.MarkFlagsRequiredTogether("name", "version")
 
 	// Optional flag to specify build files location
 	addCmd.Flags().
@@ -113,6 +187,9 @@ func init() { //nolint:gochecknoinits
 	// Optional flag to give a description of a package
 	addCmd.Flags().
 		StringVarP(&description, "desc", "d", "[No description provided for this package.]", "Description of the package to add.")
+
+	// Flag to import a json file containing the record to add to the repo's db
+	addCmd.Flags().StringVarP(&importFile, "import", "i", "", "JSON file to import to the repo.")
 
 	// Optional flag to specify repo database location
 	addCmd.Flags().

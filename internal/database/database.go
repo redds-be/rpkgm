@@ -22,6 +22,19 @@ import (
 	_ "github.com/mattn/go-sqlite3" // Driver for sqlite
 )
 
+// Package defines a package in the database.
+type Package struct {
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Version       string `json:"version"`
+	BuildFilesDir string `json:"buildFilesDir"`
+}
+
+// Packages defines a slice of package.
+type Packages struct {
+	Packages []Package `json:"packages"`
+}
+
 // PkgInfo defines the basic information about a give package.
 type PkgInfo struct {
 	Name             string
@@ -79,7 +92,15 @@ func (dbAdapter Adapter) CreatePkgTable() error {
 // AddToMainRepo adds a package to the package table in the repo.
 func (dbAdapter Adapter) AddToMainRepo(name, description, repoVersion, buildFilesDir string) error {
 	const queryString = `INSERT INTO packages VALUES ($1, $2, $3, $4, $5, $6);`
-	_, err := dbAdapter.dbase.Exec(queryString, name, description, repoVersion, "", false, buildFilesDir)
+	_, err := dbAdapter.dbase.Exec(
+		queryString,
+		name,
+		description,
+		repoVersion,
+		"",
+		false,
+		buildFilesDir,
+	)
 
 	return err
 }
