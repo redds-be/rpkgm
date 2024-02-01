@@ -45,10 +45,10 @@ var manageCmd = &cobra.Command{
 
 		// Literally everything here needs a package's name, error if there isn't
 		if name == "" {
-			util.Display(os.Stderr, "Error: you need to specify a package with --name/-n first.")
+			util.Display(os.Stderr, true, "Error: you need to specify a package with --name/-n first.")
 			err := cmd.Help()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not display the help message. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not display the help message. Error: %s", err)
 				os.Exit(1)
 			}
 		}
@@ -56,7 +56,7 @@ var manageCmd = &cobra.Command{
 		// Connect to the database
 		dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not connect to the database. Error: %s", err)
+			util.Display(os.Stderr, true, "rpkgm could not connect to the database. Error: %s", err)
 			os.Exit(1)
 		}
 
@@ -64,7 +64,7 @@ var manageCmd = &cobra.Command{
 		defer func(dbAdapter *database.Adapter) {
 			err := dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 				os.Exit(1)
 			}
 		}(dbAdapter)
@@ -72,12 +72,12 @@ var manageCmd = &cobra.Command{
 		// Check if the given package is in the repo (forcing the close if the db connection since I use os.Exit)
 		isInRepo, _ := dbAdapter.IsPkgInRepo(name)
 		if !isInRepo {
-			util.Display(os.Stderr, "The package: %s is not in the repository.", name)
+			util.Display(os.Stderr, true, "The package: %s is not in the repository.", name)
 
 			// Close the database connection
 			err := dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 				os.Exit(1)
 			}
 			os.Exit(1)
@@ -87,7 +87,7 @@ var manageCmd = &cobra.Command{
 		if remove {
 			err = dbAdapter.RemovePackage(name)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not delete the package from the repository. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not delete the package from the repository. Error: %s", err)
 				os.Exit(1)
 			}
 
@@ -98,7 +98,12 @@ var manageCmd = &cobra.Command{
 		if newName != "" {
 			err = dbAdapter.RenamePackage(name, newName)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not rename the package in the repo's database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not rename the package in the repo's database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 		}
@@ -108,7 +113,7 @@ var manageCmd = &cobra.Command{
 			err = dbAdapter.ChangePkgDesc(name, newDesc)
 			if err != nil {
 				util.Display(
-					os.Stderr,
+					os.Stderr, true,
 					"rpkgm could not change the package's description in the repo's database. Error: %s",
 					err,
 				)
@@ -121,7 +126,7 @@ var manageCmd = &cobra.Command{
 			err = dbAdapter.MarkAsInstalled(name)
 			if err != nil {
 				util.Display(
-					os.Stderr,
+					os.Stderr, true,
 					"rpkgm could not mark the package as installed in the repo's database. Error: %s",
 					err,
 				)
@@ -134,7 +139,7 @@ var manageCmd = &cobra.Command{
 			err = dbAdapter.MarkAsNotInstalled(name)
 			if err != nil {
 				util.Display(
-					os.Stderr,
+					os.Stderr, true,
 					"rpkgm could not mark the package as not installed in the repo's database. Error: %s",
 					err,
 				)
@@ -146,7 +151,7 @@ var manageCmd = &cobra.Command{
 		if installedVersion != "" {
 			err = dbAdapter.SetInstalledVersion(name, installedVersion)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not set the package's installed version. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not set the package's installed version. Error: %s", err)
 				os.Exit(1)
 			}
 		}
@@ -155,7 +160,7 @@ var manageCmd = &cobra.Command{
 		if repoVersion != "" {
 			err = dbAdapter.UpdateRepoVersion(name, repoVersion)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not set the package's repo version. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not set the package's repo version. Error: %s", err)
 				os.Exit(1)
 			}
 		}

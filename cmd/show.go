@@ -58,14 +58,14 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 	Run: func(cmd *cobra.Command, args []string) {
 		// show rpkgm's warranty notice
 		if showNotice {
-			util.Display(os.Stdout, "%s", notice)
+			util.Display(os.Stdout, false, "%s", notice)
 			os.Exit(0)
 		}
 
 		// Connect to the database
 		dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could connect to the repo's database. Error: %s", err)
+			util.Display(os.Stderr, true, "rpkgm could connect to the repo's database. Error: %s", err)
 			os.Exit(1)
 		}
 
@@ -73,7 +73,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			// Get every package info in the database
 			allPkgInfo, err := dbAdapter.GetAllPkgInfo()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could query the repo's database. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could query the repo's database. Error: %s", err)
 				os.Exit(1)
 			}
 
@@ -81,7 +81,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			for _, pkgInfo := range allPkgInfo {
 				if pkgInfo.Installed {
 					util.Display(
-						os.Stdout,
+						os.Stdout, false,
 						"%s [Installed (%s)]\t- %s\t- Repo's version: %s",
 						pkgInfo.Name,
 						pkgInfo.InstalledVersion,
@@ -89,14 +89,14 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 						pkgInfo.RepoVersion,
 					)
 				} else {
-					util.Display(os.Stdout, "%s [Not installed]\t- %s\t- Repo's version: %s", pkgInfo.Name, pkgInfo.Description, pkgInfo.RepoVersion)
+					util.Display(os.Stdout, false, "%s [Not installed]\t- %s\t- Repo's version: %s", pkgInfo.Name, pkgInfo.Description, pkgInfo.RepoVersion)
 				}
 			}
 
 			// Close the database
 			err = dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 				os.Exit(1)
 			}
 
@@ -106,17 +106,17 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 		// The following operations require a package name, error if there isn't
 		if name == "" {
 			// Display help
-			util.Display(os.Stderr, "Error: you need to specify a package with --name/-n first.")
+			util.Display(os.Stderr, true, "Error: you need to specify a package with --name/-n first.")
 			err := cmd.Help()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not display the help message. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not display the help message. Error: %s", err)
 				os.Exit(1)
 			}
 
 			// Close the database
 			err = dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 				os.Exit(1)
 			}
 			os.Exit(1)
@@ -125,12 +125,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 		// Check if the package is in the repo, error this is not the case
 		isInRepo, _ := dbAdapter.IsPkgInRepo(name)
 		if !isInRepo {
-			util.Display(os.Stderr, "The package: %s is not in repository.", name)
+			util.Display(os.Stderr, true, "The package: %s is not in repository.", name)
 
 			// Close the database
 			err = dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 				os.Exit(1)
 			}
 			os.Exit(1)
@@ -142,6 +142,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			if err != nil {
 				util.Display(
 					os.Stderr,
+					true,
 					"rpkgm could not find the build files (build files includes the license) for the given package. Error: %s",
 					err,
 				)
@@ -152,7 +153,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			licenseFile, err := os.Open(fmt.Sprintf("%s/LICENSE", buildFilesDir))
 			if err != nil {
 				util.Display(
-					os.Stderr,
+					os.Stderr, true,
 					"rpkgm could not open or find the license file for the given package. Error: %s",
 					err,
 				)
@@ -164,7 +165,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 				err := licenseFile.Close()
 				if err != nil {
 					util.Display(
-						os.Stderr,
+						os.Stderr, true,
 						"rpkgm could not close the license file for the given package. Error: %s",
 						err,
 					)
@@ -176,7 +177,7 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			licenseContent, err := io.ReadAll(licenseFile)
 			if err != nil {
 				util.Display(
-					os.Stderr,
+					os.Stderr, true,
 					"rpkgm could not read from the license file of the given package. Error: %s",
 					err,
 				)
@@ -184,21 +185,21 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			}
 
 			// Print the license file's content
-			util.Display(os.Stdout, "%v", string(licenseContent))
+			util.Display(os.Stdout, false, "%v", string(licenseContent))
 		}
 
 		if showInfo {
 			// Get the given package's general info
 			pkgInfo, err := dbAdapter.GetPkgInfo(name)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not get the given package's information. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not get the given package's information. Error: %s", err)
 				os.Exit(1)
 			}
 
 			// Display the general info (changes depending on the installation status)
 			if pkgInfo.Installed {
 				util.Display(
-					os.Stdout,
+					os.Stdout, false,
 					"%s [Installed (%s)]\t- %s\t- Repo's version: %s",
 					pkgInfo.Name,
 					pkgInfo.InstalledVersion,
@@ -206,14 +207,14 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 					pkgInfo.RepoVersion,
 				)
 			} else {
-				util.Display(os.Stdout, "%s [Not installed]\t- %s\t- Repo's version: %s", pkgInfo.Name, pkgInfo.Description, pkgInfo.RepoVersion)
+				util.Display(os.Stdout, false, "%s [Not installed]\t- %s\t- Repo's version: %s", pkgInfo.Name, pkgInfo.Description, pkgInfo.RepoVersion)
 			}
 		}
 
 		// Close the database connection
 		err = dbAdapter.CloseDBConnection()
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+			util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 			os.Exit(1)
 		}
 	},
