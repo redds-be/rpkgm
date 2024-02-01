@@ -50,7 +50,8 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 	// Inform of the dependencies
 	if string(depsOut) != "" {
 		util.Display(
-			os.Stdout, true,
+			os.Stdout,
+			true,
 			"The package %s, marks [%s] as dependencies, rpkgm not support dependency resolution and"+
 				" installation yet, you will need to install them manually.",
 			pc.pkgName,
@@ -97,8 +98,18 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 		verify := fmt.Sprintf("source %s ; verify %s", rbuild, workdir)
 		verOut, err := exec.Command("/usr/bin/env", "bash", "-c", verify).CombinedOutput()
 		if err != nil {
-			util.Display(os.Stderr, true, "rpkgm could not verify the archive for: %s\n%s", pc.pkgName, string(verOut))
-			util.Display(os.Stderr, false, "You can disable the archive verification by re-running using --force/-f.")
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not verify the archive for: %s\n%s",
+				pc.pkgName,
+				string(verOut),
+			)
+			util.Display(
+				os.Stderr,
+				false,
+				"You can disable the archive verification by re-running using --force/-f.",
+			)
 
 			return err
 		}
@@ -209,7 +220,12 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 		// Clean working directory
 		err = os.RemoveAll(workdir)
 		if err != nil {
-			util.Display(os.Stderr, true, "rpkgm could not clean the working directory for: %s", pc.pkgName)
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not clean the working directory for: %s",
+				pc.pkgName,
+			)
 
 			return err
 		}

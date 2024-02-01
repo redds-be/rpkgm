@@ -45,10 +45,19 @@ var manageCmd = &cobra.Command{
 
 		// Literally everything here needs a package's name, error if there isn't
 		if name == "" {
-			util.Display(os.Stderr, true, "Error: you need to specify a package with --name/-n first.")
+			util.Display(
+				os.Stderr,
+				true,
+				"Error: you need to specify a package with --name/-n first.",
+			)
 			err := cmd.Help()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not display the help message. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not display the help message. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 		}
@@ -64,7 +73,12 @@ var manageCmd = &cobra.Command{
 		defer func(dbAdapter *database.Adapter) {
 			err := dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not close the connection to the database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 		}(dbAdapter)
@@ -77,7 +91,12 @@ var manageCmd = &cobra.Command{
 			// Close the database connection
 			err := dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not close the connection to the database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 			os.Exit(1)
@@ -87,7 +106,12 @@ var manageCmd = &cobra.Command{
 		if remove {
 			err = dbAdapter.RemovePackage(name)
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not delete the package from the repository. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not delete the package from the repository. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 
@@ -113,7 +137,8 @@ var manageCmd = &cobra.Command{
 			err = dbAdapter.ChangePkgDesc(name, newDesc)
 			if err != nil {
 				util.Display(
-					os.Stderr, true,
+					os.Stderr,
+					true,
 					"rpkgm could not change the package's description in the repo's database. Error: %s",
 					err,
 				)
@@ -126,7 +151,8 @@ var manageCmd = &cobra.Command{
 			err = dbAdapter.MarkAsInstalled(name)
 			if err != nil {
 				util.Display(
-					os.Stderr, true,
+					os.Stderr,
+					true,
 					"rpkgm could not mark the package as installed in the repo's database. Error: %s",
 					err,
 				)
@@ -139,7 +165,8 @@ var manageCmd = &cobra.Command{
 			err = dbAdapter.MarkAsNotInstalled(name)
 			if err != nil {
 				util.Display(
-					os.Stderr, true,
+					os.Stderr,
+					true,
 					"rpkgm could not mark the package as not installed in the repo's database. Error: %s",
 					err,
 				)
@@ -151,7 +178,12 @@ var manageCmd = &cobra.Command{
 		if installedVersion != "" {
 			err = dbAdapter.SetInstalledVersion(name, installedVersion)
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not set the package's installed version. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not set the package's installed version. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 		}
@@ -160,7 +192,12 @@ var manageCmd = &cobra.Command{
 		if repoVersion != "" {
 			err = dbAdapter.UpdateRepoVersion(name, repoVersion)
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not set the package's repo version. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not set the package's repo version. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 		}
@@ -179,13 +216,16 @@ func init() { //nolint:gochecknoinits
 	manageCmd.Flags().StringVar(&newName, "ren", "", "Rename a given package.")
 
 	// Flag for the new description to give to a package
-	manageCmd.Flags().StringVarP(&newDesc, "desc", "d", "", "Change the description of a given package.")
+	manageCmd.Flags().
+		StringVarP(&newDesc, "desc", "d", "", "Change the description of a given package.")
 
 	// Flag to mark a package as installed
-	manageCmd.Flags().BoolVarP(&markInstalled, "installed", "i", false, "Mark a given package as installed")
+	manageCmd.Flags().
+		BoolVarP(&markInstalled, "installed", "i", false, "Mark a given package as installed")
 
 	// Flag to mark a package as not installed
-	manageCmd.Flags().BoolVarP(&markUninstalled, "uninstalled", "u", false, "Mark a given package as not installed")
+	manageCmd.Flags().
+		BoolVarP(&markUninstalled, "uninstalled", "u", false, "Mark a given package as not installed")
 
 	// Mark installed and uninstalled as incompatible together
 	manageCmd.MarkFlagsMutuallyExclusive("installed", "uninstalled")
@@ -195,12 +235,13 @@ func init() { //nolint:gochecknoinits
 		StringVar(&installedVersion, "iv", "", "Change a given package's installed version in the database.")
 
 	// Flag to change a package's repo version in the db
-	manageCmd.Flags().StringVar(&repoVersion, "rv", "", "Change a given package's repo version in the database.")
+	manageCmd.Flags().
+		StringVar(&repoVersion, "rv", "", "Change a given package's repo version in the database.")
 
 	// Flag to remove a package from the repo
 	manageCmd.Flags().BoolVar(&remove, "rm", false, "Remove a given package from the repository.")
 
 	// Optional flag to specify repo database location
 	manageCmd.Flags().
-		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main.db", "Specify repo Database location (Defaults to /var/rpkgm/main.db).")
+		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main/main.db", "Specify repo Database location.")
 }

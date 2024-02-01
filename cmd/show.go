@@ -52,9 +52,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 
 // showCmd represents the show command.
-var showCmd = &cobra.Command{ //nolint:gochecknoglobals
+var showCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Show license related informations",
+	Short: "Show license related informations.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// show rpkgm's warranty notice
 		if showNotice {
@@ -65,7 +65,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 		// Connect to the database
 		dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 		if err != nil {
-			util.Display(os.Stderr, true, "rpkgm could connect to the repo's database. Error: %s", err)
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could connect to the repo's database. Error: %s",
+				err,
+			)
 			os.Exit(1)
 		}
 
@@ -73,7 +78,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			// Get every package info in the database
 			allPkgInfo, err := dbAdapter.GetAllPkgInfo()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could query the repo's database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could query the repo's database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 
@@ -96,7 +106,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			// Close the database
 			err = dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not close the connection to the database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 
@@ -106,17 +121,31 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 		// The following operations require a package name, error if there isn't
 		if name == "" {
 			// Display help
-			util.Display(os.Stderr, true, "Error: you need to specify a package with --name/-n first.")
+			util.Display(
+				os.Stderr,
+				true,
+				"Error: you need to specify a package with --name/-n first.",
+			)
 			err := cmd.Help()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not display the help message. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not display the help message. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 
 			// Close the database
 			err = dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not close the connection to the database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 			os.Exit(1)
@@ -130,7 +159,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			// Close the database
 			err = dbAdapter.CloseDBConnection()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not close the connection to the database. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 			os.Exit(1)
@@ -153,7 +187,8 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			licenseFile, err := os.Open(fmt.Sprintf("%s/LICENSE", buildFilesDir))
 			if err != nil {
 				util.Display(
-					os.Stderr, true,
+					os.Stderr,
+					true,
 					"rpkgm could not open or find the license file for the given package. Error: %s",
 					err,
 				)
@@ -192,7 +227,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 			// Get the given package's general info
 			pkgInfo, err := dbAdapter.GetPkgInfo(name)
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not get the given package's information. Error: %s", err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not get the given package's information. Error: %s",
+					err,
+				)
 				os.Exit(1)
 			}
 
@@ -214,7 +254,12 @@ var showCmd = &cobra.Command{ //nolint:gochecknoglobals
 		// Close the database connection
 		err = dbAdapter.CloseDBConnection()
 		if err != nil {
-			util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not close the connection to the database. Error: %s",
+				err,
+			)
 			os.Exit(1)
 		}
 	},
@@ -235,12 +280,14 @@ func init() { //nolint:gochecknoinits
 	showCmd.Flags().BoolVarP(&showLicense, "license", "l", false, "Show a given package's license.")
 
 	// Flag to show a given package's general information.
-	showCmd.Flags().BoolVarP(&showInfo, "info", "i", false, "Show a given package's general information.")
+	showCmd.Flags().
+		BoolVarP(&showInfo, "info", "i", false, "Show a given package's general information.")
 
 	// Flag to show every packages general information.
-	showCmd.Flags().BoolVarP(&showAll, "all", "a", false, "Show every package's general information.")
+	showCmd.Flags().
+		BoolVarP(&showAll, "all", "a", false, "Show every package's general information.")
 
 	// Optional flag to specify repo database location
 	showCmd.Flags().
-		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main.db", "Specify repo Database location (Defaults to /var/rpkgm/main.db).")
+		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main/main.db", "Specify repo Database location.")
 }
