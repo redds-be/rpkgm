@@ -53,10 +53,15 @@ var addCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Create the main repo table if it does not exist
+		// Create the packages table if it does not exist
 		err = dbAdapter.CreatePkgTable()
 		if err != nil {
-			util.Display(os.Stderr, true, "rpkgm could not create the main repo table. Error: %s", err)
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not create the packages table in the repo. Error: %s",
+				err,
+			)
 			os.Exit(1)
 		}
 
@@ -106,7 +111,7 @@ var addCmd = &cobra.Command{
 				}
 
 				// Add the package to the repo
-				err = dbAdapter.AddToMainRepo(
+				err = dbAdapter.AddToRepo(
 					pkgs.Packages[index].Name,
 					pkgs.Packages[index].Description,
 					pkgs.Packages[index].Version,
@@ -141,7 +146,7 @@ var addCmd = &cobra.Command{
 			buildFilesDir = strings.TrimSuffix(buildFilesDir, "/")
 
 			// Add the package to the main repo
-			err = dbAdapter.AddToMainRepo(name, description, version, buildFilesDir)
+			err = dbAdapter.AddToRepo(name, description, version, buildFilesDir)
 			if err != nil {
 				util.Display(
 					os.Stderr, true,
@@ -181,8 +186,7 @@ func init() { //nolint:gochecknoinits
 
 	// Optional flag to specify build files location
 	addCmd.Flags().
-		StringVarP(&buildFilesDir, "files", "f", "",
-			"Build files location. (Defaults to /var/rpkgm/main/<pkgName>)")
+		StringVarP(&buildFilesDir, "files", "f", "", "Build files location.")
 
 	// Optional flag to give a description of a package
 	addCmd.Flags().
@@ -193,5 +197,5 @@ func init() { //nolint:gochecknoinits
 
 	// Optional flag to specify repo database location
 	addCmd.Flags().
-		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main.db", "Specify repo Database location (Defaults to /var/rpkgm/main.db).")
+		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main/main.db", "Specify repo Database location.")
 }

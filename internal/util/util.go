@@ -17,9 +17,13 @@
 package util
 
 import (
+	"archive/tar"
+	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/user"
 
@@ -57,4 +61,108 @@ func Display(out io.Writer, doLog bool, format string, toDisplay ...any) {
 	if doLog {
 		logging.LogToFile(format, toDisplay...)
 	}
+}
+
+// Download downloads a body from a url and writes to dest.
+func Download(dest, url string) error {
+	// Create the destination file
+	destFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+
+	// Prepare the client and the request
+	client := &http.Client{}
+	ctx := context.Background()
+	dlReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+
+	// Do the request
+	resp, err := client.Do(dlReq)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("url returned code %d", resp.StatusCode) //nolint:goerr113
+	}
+
+	// Copy the content of the body to the newly created file
+	_, err = io.Copy(destFile, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	// Close the destination file
+	err = destFile.Close()
+	if err != nil {
+		return err
+	}
+
+	// Close the body
+	err = resp.Body.Close()
+
+	return err
+}
+
+func Untar(destDir, archive string) error { //nolint:cyclop
+	tarFile, err := os.Open(archive)
+	if err != nil {
+		return err
+	}
+
+	gzipReader, err := gzip.NewReader(tarFile)
+	if err != nil {
+		return err
+	}
+
+	tarReader := tar.NewReader(gzipReader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(fmt.Sprintf("%s/%s", destDir, header.Name), os.ModePerm); err != nil {
+				return err
+			}
+		case tar.TypeReg:
+			outFile, err := os.Create(fmt.Sprintf("%s/%s", destDir, header.Name))
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(outFile, tarReader); err != nil { //nolint:gosec
+				return err
+			}
+
+			err = outFile.Close()
+			if err != nil {
+				return err
+			}
+
+		default:
+			return fmt.Errorf( //nolint:goerr113
+				"unknown type: %v in %v",
+				header.Typeflag,
+				header.Name,
+			)
+		}
+	}
+
+	err = tarFile.Close()
+	if err != nil {
+		return err
+	}
+
+	err = gzipReader.Close()
+
+	return err
 }

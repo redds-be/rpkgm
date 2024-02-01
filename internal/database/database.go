@@ -42,6 +42,7 @@ type PkgInfo struct {
 	RepoVersion      string
 	InstalledVersion string
 	Installed        bool
+	BuildFilesDir    string
 }
 
 // Adapter implements the DBPort interface.
@@ -89,8 +90,8 @@ func (dbAdapter Adapter) CreatePkgTable() error {
 	return err
 }
 
-// AddToMainRepo adds a package to the package table in the repo.
-func (dbAdapter Adapter) AddToMainRepo(name, description, repoVersion, buildFilesDir string) error {
+// AddToRepo adds a package to the package table in the repo.
+func (dbAdapter Adapter) AddToRepo(name, description, repoVersion, buildFilesDir string) error {
 	const queryString = `INSERT INTO packages VALUES ($1, $2, $3, $4, $5, $6);`
 	_, err := dbAdapter.dbase.Exec(
 		queryString,
@@ -105,13 +106,21 @@ func (dbAdapter Adapter) AddToMainRepo(name, description, repoVersion, buildFile
 	return err
 }
 
+// SyncRepo syncs packages in the database (using the name as the key).
+func (dbAdapter Adapter) SyncRepo(name, description, repoVersion, buildFilesDir string) error {
+	const queryString = `UPDATE packages SET description = $1, repoVersion = $2, buildFilesDir = $3 WHERE name = $4;`
+	_, err := dbAdapter.dbase.Exec(queryString, description, repoVersion, buildFilesDir, name)
+
+	return err
+}
+
 // GetPkgInfo returns the basic information about a given package.
 func (dbAdapter Adapter) GetPkgInfo(name string) (PkgInfo, error) {
-	const queryString = `SELECT name, description, repoVersion, installedVersion, installed FROM packages WHERE name = $1;`
+	const queryString = `SELECT name, description, repoVersion, installedVersion, installed, buildFilesDir FROM packages WHERE name = $1;`
 	var info PkgInfo
 
 	err := dbAdapter.dbase.QueryRow(queryString, name).
-		Scan(&info.Name, &info.Description, &info.RepoVersion, &info.InstalledVersion, &info.Installed)
+		Scan(&info.Name, &info.Description, &info.RepoVersion, &info.InstalledVersion, &info.Installed, &info.BuildFilesDir)
 	if err != nil {
 		return PkgInfo{}, err
 	}
@@ -121,8 +130,8 @@ func (dbAdapter Adapter) GetPkgInfo(name string) (PkgInfo, error) {
 
 // GetAllPkgInfo returns the basic information about all packages in the repo.
 func (dbAdapter Adapter) GetAllPkgInfo() ([]PkgInfo, error) {
-	const queryString = `SELECT name, description, repoVersion, installedVersion, installed FROM packages;`
-	var info []PkgInfo
+	const queryString = `SELECT name, description, repoVersion, installedVersion, installed, buildFilesDir FROM packages;`
+	var infos []PkgInfo
 
 	// Get the row results of the query
 	rows, err := dbAdapter.dbase.Query(queryString) //nolint:sqlclosecheck
@@ -141,12 +150,19 @@ func (dbAdapter Adapter) GetAllPkgInfo() ([]PkgInfo, error) {
 
 	// For each row, append to info
 	for rows.Next() {
-		var i PkgInfo
-		err = rows.Scan(&i.Name, &i.Description, &i.RepoVersion, &i.InstalledVersion, &i.Installed)
-		info = append(info, i)
+		var info PkgInfo
+		err = rows.Scan(
+			&info.Name,
+			&info.Description,
+			&info.RepoVersion,
+			&info.InstalledVersion,
+			&info.Installed,
+			&info.BuildFilesDir,
+		)
+		infos = append(infos, info)
 	}
 
-	return info, err
+	return infos, err
 }
 
 // RenamePackage renames a given package.

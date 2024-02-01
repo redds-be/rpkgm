@@ -98,7 +98,12 @@ func (pc pkgConf) uninstall() error { //nolint:funlen
 			// Clean working directory
 			err = os.RemoveAll(workdir)
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not clean the working directory for: %s", pc.pkgName)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not clean the working directory for: %s",
+					pc.pkgName,
+				)
 
 				return err
 			}
