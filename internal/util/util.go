@@ -19,8 +19,11 @@ package util
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/user"
+
+	"github.com/redds-be/rpkgm/internal/logging"
 )
 
 // Define some colors.
@@ -34,20 +37,24 @@ var (
 func CheckRoot() {
 	currUser, err := user.Current()
 	if err != nil {
-		Display(os.Stderr, "Unable to determine if rpkgm is running as root.")
+		Display(os.Stderr, true, "Unable to determine if rpkgm is running as root.")
 		os.Exit(1)
 	}
 
 	if currUser.Uid != "0" {
-		Display(os.Stderr, "Please run rpkgm as root.")
+		Display(os.Stderr, false, "Please run rpkgm as root.")
 		os.Exit(1)
 	}
 }
 
 // Display is wrapper over fmt.Fprintf.
-func Display(out io.Writer, format string, toDisplay ...any) {
+func Display(out io.Writer, doLog bool, format string, toDisplay ...any) {
 	_, err := fmt.Fprintf(out, fmt.Sprintf("%s\n", format), toDisplay...)
 	if err != nil {
-		fmt.Println("rpkgm was unable to print output...") //nolint:forbidigo
+		log.Println("rpkgm was unable to print output...")
+	}
+
+	if doLog {
+		logging.LogToFile(format, toDisplay...)
 	}
 }

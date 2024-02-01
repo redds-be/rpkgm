@@ -49,14 +49,14 @@ var addCmd = &cobra.Command{
 		// Connect to the database
 		dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not connect to the database. Error: %s", err)
+			util.Display(os.Stderr, true, "rpkgm could not connect to the database. Error: %s", err)
 			os.Exit(1)
 		}
 
 		// Create the main repo table if it does not exist
 		err = dbAdapter.CreatePkgTable()
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not create the main repo table. Error: %s", err)
+			util.Display(os.Stderr, true, "rpkgm could not create the main repo table. Error: %s", err)
 			os.Exit(1)
 		}
 
@@ -65,7 +65,7 @@ var addCmd = &cobra.Command{
 			// Open the file to import
 			jsonPkgFile, err := os.Open(importFile)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm couldn't open the json file. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm couldn't open the json file. Error: %s", err)
 				os.Exit(1)
 			}
 
@@ -73,7 +73,7 @@ var addCmd = &cobra.Command{
 			contentInbytes, err := io.ReadAll(jsonPkgFile)
 			if err != nil {
 				util.Display(
-					os.Stderr,
+					os.Stderr, true,
 					"rpkgm couldn't read the json file's content. Error: %s",
 					err,
 				)
@@ -86,7 +86,7 @@ var addCmd = &cobra.Command{
 			// Read the json content of the file
 			err = json.Unmarshal(contentInbytes, &pkgs)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm couldn't read the json file. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm couldn't read the json file. Error: %s", err)
 				os.Exit(1)
 			}
 
@@ -114,7 +114,7 @@ var addCmd = &cobra.Command{
 				)
 				if err != nil {
 					util.Display(
-						os.Stderr,
+						os.Stderr, true,
 						"rpkgm was unable to add %s to the repo. Error: %s",
 						pkgs.Packages[index].Name,
 						err,
@@ -125,7 +125,7 @@ var addCmd = &cobra.Command{
 			// Close the json file
 			err = jsonPkgFile.Close()
 			if err != nil {
-				util.Display(os.Stderr, "rpgkm couln't close the json file. Error: %s", err)
+				util.Display(os.Stderr, true, "rpgkm couln't close the json file. Error: %s", err)
 				os.Exit(1)
 			}
 		}
@@ -144,9 +144,9 @@ var addCmd = &cobra.Command{
 			err = dbAdapter.AddToMainRepo(name, description, version, buildFilesDir)
 			if err != nil {
 				util.Display(
-					os.Stderr,
-					"rpkgm could not add the package to the repo. Error: %s",
-					err,
+					os.Stderr, true,
+					"rpkgm could not add the package %s to the repo. Error: %s",
+					name, err,
 				)
 				os.Exit(1)
 			}
@@ -156,7 +156,7 @@ var addCmd = &cobra.Command{
 		err = dbAdapter.CloseDBConnection()
 		if err != nil {
 			util.Display(
-				os.Stderr,
+				os.Stderr, true,
 				"rpkgm could not close the connection to the database. Error: %s",
 				err,
 			)

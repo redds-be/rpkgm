@@ -18,6 +18,7 @@ package pkg
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -49,7 +50,7 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 	// Inform of the dependencies
 	if string(depsOut) != "" {
 		util.Display(
-			os.Stdout,
+			os.Stdout, true,
 			"The package %s, marks [%s] as dependencies, rpkgm not support dependency resolution and"+
 				" installation yet, you will need to install them manually.",
 			pc.pkgName,
@@ -59,7 +60,7 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 
 	// Inform of the downloading
 	util.Display(
-		os.Stdout,
+		os.Stdout, false,
 		"Downloading (%s%d%s of %s%d%s) %s%s=%s%s",
 		util.By,
 		pc.index,
@@ -77,14 +78,17 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 	download := fmt.Sprintf("source %s ; download %s", rbuild, workdir)
 	dlOut, err := exec.Command("/usr/bin/env", "bash", "-c", download).CombinedOutput()
 	if err != nil {
-		util.Display(os.Stderr, "rpkgm could not download the archive for: %s", pc.pkgName)
+		util.Display(os.Stderr, true, "rpkgm could not download the archive for: %s", pc.pkgName)
 
 		return err
 	}
 
+	// Little hack that will be removed later to log the output
+	util.Display(io.Discard, true, "%s", string(dlOut))
+
 	// Display the output
 	if pc.verbose && string(dlOut) != "" {
-		log.Println(string(dlOut))
+		util.Display(os.Stdout, false, "%s", string(dlOut))
 	}
 
 	// Do we verify the archive?
@@ -93,21 +97,24 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 		verify := fmt.Sprintf("source %s ; verify %s", rbuild, workdir)
 		verOut, err := exec.Command("/usr/bin/env", "bash", "-c", verify).CombinedOutput()
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not verify the archive for: %s\n%s", pc.pkgName, string(verOut))
-			util.Display(os.Stderr, "You can disable the archive verification by re-running using --force/-f.")
+			util.Display(os.Stderr, true, "rpkgm could not verify the archive for: %s\n%s", pc.pkgName, string(verOut))
+			util.Display(os.Stderr, false, "You can disable the archive verification by re-running using --force/-f.")
 
 			return err
 		}
 
+		// Little hack that will be removed later to log the output
+		util.Display(io.Discard, true, "%s", string(verOut))
+
 		// Display the output
 		if pc.verbose && string(verOut) != "" {
-			util.Display(os.Stdout, string(verOut))
+			util.Display(os.Stdout, false, string(verOut))
 		}
 	}
 
 	// Inform of the extraction
 	util.Display(
-		os.Stdout,
+		os.Stdout, false,
 		"Extracting (%s%d%s of %s%d%s) %s%s=%s%s",
 		util.By,
 		pc.index,
@@ -125,14 +132,17 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 	extract := fmt.Sprintf("source %s ; extract %s", rbuild, workdir)
 	exOut, err := exec.Command("/usr/bin/env", "bash", "-c", extract).CombinedOutput()
 	if err != nil {
-		util.Display(os.Stderr, "rpkgm could not extract the archive for: %s", pc.pkgName)
+		util.Display(os.Stderr, true, "rpkgm could not extract the archive for: %s", pc.pkgName)
 
 		return err
 	}
 
+	// Little hack that will be removed later to log the output
+	util.Display(io.Discard, true, "%s", string(exOut))
+
 	// Display the output
 	if pc.verbose && string(exOut) != "" {
-		log.Println(string(exOut))
+		util.Display(os.Stdout, false, "%s", string(exOut))
 	}
 
 	makefile := fmt.Sprintf("var/rpkgm/main/%s/Makefile", pc.pkgName)
@@ -140,14 +150,14 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 	// Copy rpkgm's makefile into source dir.
 	_, err = exec.Command("/usr/bin/cp", makefile, workdir).CombinedOutput()
 	if err != nil {
-		util.Display(os.Stderr, "rpkgm could not copy the makefile for: %s", pc.pkgName)
+		util.Display(os.Stderr, true, "rpkgm could not copy the makefile for: %s", pc.pkgName)
 
 		return err
 	}
 
 	// Inform of the installing
 	util.Display(
-		os.Stdout,
+		os.Stdout, false,
 		"Installing (%s%d%s of %s%d%s) %s%s=%s%s",
 		util.By,
 		pc.index,
@@ -165,21 +175,24 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 	install := fmt.Sprintf("source %s ; install %s", rbuild, workdir)
 	inOut, err := exec.Command("/usr/bin/env", "bash", "-c", install).CombinedOutput()
 	if err != nil {
-		util.Display(os.Stderr, "rpkgm could not install: %s", pc.pkgName)
+		util.Display(os.Stderr, true, "rpkgm could not install: %s", pc.pkgName)
 
 		return err
 	}
 
+	// Little hack that will be removed later to log the output
+	util.Display(io.Discard, true, "%s", string(inOut))
+
 	// Display the output
 	if pc.verbose && string(inOut) != "" {
-		util.Display(os.Stdout, string(inOut))
+		util.Display(os.Stdout, false, string(inOut))
 	}
 
 	// If we don't keep the source, remove it
 	if !pc.keep {
 		// Inform of the cleaning
 		util.Display(
-			os.Stdout,
+			os.Stdout, false,
 			"Cleaning (%s%d%s of %s%d%s) %s%s=%s%s",
 			util.By,
 			pc.index,
@@ -196,7 +209,7 @@ func (pc pkgConf) install() error { //nolint:funlen,cyclop
 		// Clean working directory
 		err = os.RemoveAll(workdir)
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not clean the working directory for: %s", pc.pkgName)
+			util.Display(os.Stderr, true, "rpkgm could not clean the working directory for: %s", pc.pkgName)
 
 			return err
 		}

@@ -36,7 +36,11 @@ type pkgConf struct {
 }
 
 // ask is used to ask the user to confirm before installing or uninstalling.
-func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool) { //nolint:cyclop,funlen,gocognit
+func ask( //nolint:cyclop,funlen,gocognit
+	toInstall, toUninstall []string,
+	dbAdapter database.Adapter,
+	force bool,
+) {
 	var atLeastOne bool
 	var choice string
 
@@ -46,7 +50,12 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 			// Check if the package is in the repo
 			isInRepo, _ := dbAdapter.IsPkgInRepo(pkgName)
 			if !isInRepo {
-				util.Display(os.Stdout, "The package: %s is not in the repository. Skipping...", pkgName)
+				util.Display(
+					os.Stdout,
+					true,
+					"The package: %s is not in the repository. Skipping...",
+					pkgName,
+				)
 
 				continue
 			}
@@ -56,13 +65,14 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 			if isInstalled && !force {
 				util.Display(
 					os.Stdout,
+					true,
 					"The package: %s is already installed (you can use --force/-f to force the installation). Skipping...",
 					pkgName,
 				)
 
 				continue
 			} else if isInstalled && force {
-				util.Display(os.Stdout, "Install %s", pkgName)
+				util.Display(os.Stdout, false, "Install %s", pkgName)
 				atLeastOne = true
 
 				continue
@@ -70,7 +80,7 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 
 			// If every check is ok, we go on
 			if isInRepo && !isInstalled {
-				util.Display(os.Stdout, "Install %s", pkgName)
+				util.Display(os.Stdout, false, "Install %s", pkgName)
 				atLeastOne = true
 			}
 		}
@@ -84,7 +94,12 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 				// Close the database connection
 				err = dbAdapter.CloseDBConnection()
 				if err != nil {
-					util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+					util.Display(
+						os.Stderr,
+						true,
+						"rpkgm could not close the connection to the database. Error: %s",
+						err,
+					)
 					os.Exit(1)
 				}
 				os.Exit(0)
@@ -95,13 +110,18 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 				return
 			}
 		} else {
-			util.Display(os.Stderr, "No package selected for installation.")
+			util.Display(os.Stderr, true, "No package selected for installation.")
 		}
 
 		// Close the database connection
 		err := dbAdapter.CloseDBConnection()
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not close the connection to the database. Error: %s",
+				err,
+			)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -110,7 +130,7 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 			// Check if the package is in the repo
 			isInRepo, _ := dbAdapter.IsPkgInRepo(pkgName)
 			if !isInRepo {
-				util.Display(os.Stdout, "The package: %s is not in the repository. Skipping...", pkgName)
+				util.Display(os.Stdout, true, "The package: %s is not in the repository. Skipping...", pkgName)
 
 				continue
 			}
@@ -119,7 +139,7 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 			isInstalled, _ := dbAdapter.IsInstalled(pkgName)
 			if !isInstalled {
 				util.Display(
-					os.Stdout,
+					os.Stdout, true,
 					"The package: %s is not installed. Skipping...",
 					pkgName,
 				)
@@ -129,7 +149,7 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 
 			// If the package is in the repo and installed, we mark it for uninstallation
 			if isInRepo && isInstalled {
-				util.Display(os.Stdout, "Uninstall %s", pkgName)
+				util.Display(os.Stdout, false, "Uninstall %s", pkgName)
 				atLeastOne = true
 			}
 		}
@@ -143,7 +163,7 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 				// Close the database connection
 				err = dbAdapter.CloseDBConnection()
 				if err != nil {
-					util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+					util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 					os.Exit(1)
 				}
 				os.Exit(0)
@@ -154,13 +174,13 @@ func ask(toInstall, toUninstall []string, dbAdapter database.Adapter, force bool
 				return
 			}
 		} else {
-			util.Display(os.Stderr, "No package selected for uninstallation.")
+			util.Display(os.Stderr, true, "No package selected for uninstallation.")
 		}
 
 		// Close the database connection
 		err := dbAdapter.CloseDBConnection()
 		if err != nil {
-			util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+			util.Display(os.Stderr, true, "rpkgm could not close the connection to the database. Error: %s", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -178,7 +198,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 	// Connect to the database
 	dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 	if err != nil {
-		util.Display(os.Stderr, "rpkgm could not connect to the database. Error: %s", err)
+		util.Display(os.Stderr, true, "rpkgm could not connect to the database. Error: %s", err)
 		os.Exit(1)
 	}
 
@@ -195,7 +215,12 @@ func Manage( //nolint:funlen,cyclop,gocognit
 			if yes {
 				isInRepo, _ := dbAdapter.IsPkgInRepo(pkgName)
 				if !isInRepo {
-					util.Display(os.Stderr, "The package named: %s is not in the repo.", pkgName)
+					util.Display(
+						os.Stderr,
+						true,
+						"The package named: %s is not in the repo.",
+						pkgName,
+					)
 
 					continue
 				}
@@ -208,6 +233,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 				if err != nil && !force {
 					util.Display(
 						os.Stderr,
+						true,
 						"rpkgm could not determine if %s is installed, you can ignore this error with --force/-f. Error: %s",
 						pkgName,
 						err,
@@ -220,6 +246,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 				if isInstalled && !force {
 					util.Display(
 						os.Stderr,
+						true,
 						"The package named: %s is already marked as installed, to force install it, use --force/-f.",
 						pkgName,
 					)
@@ -233,6 +260,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 			if err != nil && !force {
 				util.Display(
 					os.Stderr,
+					true,
 					"rpkgm could not determine %s's version in the repo. you can ignore this error with --force/-f. Error: %s",
 					pkgName,
 					err,
@@ -254,7 +282,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 
 			// Call the install func
 			if err := conf.install(); err != nil {
-				util.Display(os.Stderr, "%s", err)
+				util.Display(os.Stderr, true, "%s", err)
 
 				continue
 			}
@@ -264,8 +292,10 @@ func Manage( //nolint:funlen,cyclop,gocognit
 			if err != nil {
 				util.Display(
 					os.Stderr,
+					true,
 					"rpkgm could not mark %s as installed although the package is, in fact installed. Error: %s",
-					pkgName, err,
+					pkgName,
+					err,
 				)
 			}
 
@@ -274,6 +304,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 			if err != nil {
 				util.Display(
 					os.Stderr,
+					true,
 					"rpkgm could not set %s's install version in the repo, although the package is, in fact installed. Error: %s",
 					pkgName,
 					err,
@@ -287,7 +318,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 				// If the package is not in the repo, we skip it
 				isInRepo, _ := dbAdapter.IsPkgInRepo(pkgName)
 				if !isInRepo {
-					util.Display(os.Stderr, "The package named: %s is not in the repo.", pkgName)
+					util.Display(os.Stderr, true, "The package named: %s is not in the repo.", pkgName)
 
 					continue
 				}
@@ -295,13 +326,13 @@ func Manage( //nolint:funlen,cyclop,gocognit
 				// If the package is not installed, we skip it
 				isInstalled, err := dbAdapter.IsInstalled(pkgName)
 				if err != nil {
-					util.Display(os.Stderr, "rpkgm could not determine if %s is installed. Error: %s", pkgName, err)
+					util.Display(os.Stderr, true, "rpkgm could not determine if %s is installed. Error: %s", pkgName, err)
 
 					continue
 				}
 
 				if !isInstalled {
-					util.Display(os.Stderr, "The package named: %s is not installed.", pkgName)
+					util.Display(os.Stderr, true, "The package named: %s is not installed.", pkgName)
 
 					continue
 				}
@@ -318,7 +349,7 @@ func Manage( //nolint:funlen,cyclop,gocognit
 
 			// Call the uninstall func
 			if err := conf.uninstall(); err != nil {
-				util.Display(os.Stderr, "%s", err)
+				util.Display(os.Stderr, true, "%s", err)
 
 				continue
 			}
@@ -326,13 +357,18 @@ func Manage( //nolint:funlen,cyclop,gocognit
 			// Mark the package as not installed
 			err = dbAdapter.MarkAsNotInstalled(pkgName)
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not mark the package as uninstalled although the package is, in fact uninstalled. Error: %s", err)
+				util.Display(os.Stderr, true, "rpkgm could not mark the package as uninstalled although the package is, in fact uninstalled. Error: %s", err)
 			}
 
 			// Remove the package's installed version from the db
 			err = dbAdapter.SetInstalledVersion(pkgName, "")
 			if err != nil {
-				util.Display(os.Stderr, "rpkgm could not reset %s's install version in the repo, although the package is, in fact uninstalled. Error: %s", pkgName, err)
+				util.Display(
+					os.Stderr,
+					true,
+					"rpkgm could not reset %s's install version in the repo, although the package is, in fact uninstalled. Error: %s",
+					pkgName, err,
+				)
 			}
 		}
 	}
@@ -340,7 +376,12 @@ func Manage( //nolint:funlen,cyclop,gocognit
 	// Close the database connection
 	err = dbAdapter.CloseDBConnection()
 	if err != nil {
-		util.Display(os.Stderr, "rpkgm could not close the connection to the database. Error: %s", err)
+		util.Display(
+			os.Stderr,
+			true,
+			"rpkgm could not close the connection to the database. Error: %s",
+			err,
+		)
 		os.Exit(1)
 	}
 }
