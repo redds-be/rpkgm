@@ -41,7 +41,7 @@ var (
 func CheckRoot() {
 	currUser, err := user.Current()
 	if err != nil {
-		Display(os.Stderr, true, "Unable to determine if rpkgm is running as root.")
+		Display(os.Stderr, true, "Unable to determine if rpkgm is running as root. Error: %s", err)
 		os.Exit(1)
 	}
 
@@ -55,7 +55,7 @@ func CheckRoot() {
 func Display(out io.Writer, doLog bool, format string, toDisplay ...any) {
 	_, err := fmt.Fprintf(out, fmt.Sprintf("%s\n", format), toDisplay...)
 	if err != nil {
-		log.Println("rpkgm was unable to print output...")
+		log.Printf("rpkgm was unable to print to output. Error: %s\n", err)
 	}
 
 	if doLog {

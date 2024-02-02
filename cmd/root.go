@@ -49,7 +49,7 @@ under certain conditions; see <https://www.gnu.org/licenses/gpl-3.0.html>.`,
 		} else {
 			err := cmd.Help()
 			if err != nil {
-				util.Display(os.Stderr, true, "rpkgm could not display the help message. Error: %s", err)
+				util.Display(os.Stderr, false, "rpkgm could not display the help message. Error: %s", err)
 			}
 		}
 	},
@@ -60,7 +60,7 @@ under certain conditions; see <https://www.gnu.org/licenses/gpl-3.0.html>.`,
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		util.Display(os.Stderr, true, "rpkgm could not start. Error: %s", err)
+		util.Display(os.Stderr, false, "rpkgm could not start. Error: %s", err)
 	}
 }
 

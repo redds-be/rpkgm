@@ -14,7 +14,7 @@ func LogToFile(format string, toLog ...any) {
 	// Open the log file or create it if it does not exist
 	logFile, err := os.OpenFile("var/log/rpkgm.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, fileMode)
 	if err != nil {
-		log.Println("rpkgm could not open the log file.")
+		log.Printf("rpkgm could not open the log file. Error: %s\n", err)
 
 		return
 	}
@@ -28,7 +28,7 @@ func LogToFile(format string, toLog ...any) {
 	// Close the log file
 	err = logFile.Close()
 	if err != nil {
-		log.Println("rpkgm could not close the log file.")
+		log.Printf("rpkgm could not close the log file. Error: %s\n", err)
 
 		return
 	}
