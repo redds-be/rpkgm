@@ -19,7 +19,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/redds-be/rpkgm/internal/database"
+	"github.com/redds-be/rpkgm/internal/manage"
 	"github.com/redds-be/rpkgm/internal/util"
 	"github.com/spf13/cobra"
 )
@@ -48,7 +48,7 @@ var manageCmd = &cobra.Command{
 			util.Display(
 				os.Stderr,
 				true,
-				"Error: you need to specify a package with --name/-n first.",
+				"You need to specify a package name with --name/-n before managing its information.",
 			)
 			err := cmd.Help()
 			if err != nil {
@@ -62,145 +62,18 @@ var manageCmd = &cobra.Command{
 			}
 		}
 
-		// Connect to the database
-		dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
-		if err != nil {
-			util.Display(os.Stderr, true, "rpkgm could not connect to the database. Error: %s", err)
-			os.Exit(1)
-		}
-
-		// Defer the closing of the database connection
-		defer func(dbAdapter *database.Adapter) {
-			err := dbAdapter.CloseDBConnection()
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not close the connection to the database. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}(dbAdapter)
-
-		// Check if the given package is in the repo (forcing the close if the db connection since I use os.Exit)
-		isInRepo, _ := dbAdapter.IsPkgInRepo(name)
-		if !isInRepo {
-			util.Display(os.Stderr, true, "The package: %s is not in the repository.", name)
-
-			// Close the database connection
-			err := dbAdapter.CloseDBConnection()
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not close the connection to the database. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-			os.Exit(1)
-		}
-
-		// Remove the given package
-		if remove {
-			err = dbAdapter.RemovePackage(name)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not delete the package from the repository. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-
-			return
-		}
-
-		// Rename the given package
-		if newName != "" {
-			err = dbAdapter.RenamePackage(name, newName)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not rename the package in the repo's database. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}
-
-		// Change the given package's description
-		if newDesc != "" {
-			err = dbAdapter.ChangePkgDesc(name, newDesc)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not change the package's description in the repo's database. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}
-
-		// Mark the given package as installed
-		if markInstalled {
-			err = dbAdapter.MarkAsInstalled(name)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not mark the package as installed in the repo's database. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}
-
-		// Mark the given package as not installed
-		if markUninstalled {
-			err = dbAdapter.MarkAsNotInstalled(name)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not mark the package as not installed in the repo's database. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}
-
-		// Change or set the given package's installed version
-		if installedVersion != "" {
-			err = dbAdapter.SetInstalledVersion(name, installedVersion)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not set the package's installed version. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}
-
-		// Change or set the given package's repo version
-		if repoVersion != "" {
-			err = dbAdapter.UpdateRepoVersion(name, repoVersion)
-			if err != nil {
-				util.Display(
-					os.Stderr,
-					true,
-					"rpkgm could not set the package's repo version. Error: %s",
-					err,
-				)
-				os.Exit(1)
-			}
-		}
+		// Decide what to do and do what is needed to do
+		manage.Decide(
+			repoDB,
+			name,
+			newName,
+			newDesc,
+			installedVersion,
+			repoVersion,
+			remove,
+			markInstalled,
+			markUninstalled,
+		)
 	},
 }
 
