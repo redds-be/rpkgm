@@ -17,6 +17,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/redds-be/rpkgm/internal/add"
 	"github.com/redds-be/rpkgm/internal/util"
 	"github.com/spf13/cobra"
@@ -40,8 +42,24 @@ var addCmd = &cobra.Command{
 		// Check if user is root.
 		util.CheckRoot()
 
+		deps := ""
+		if len(dependencies) > 0 {
+			// Convert the dependencies list into a string
+			deps = strings.Join(dependencies, " ")
+		}
+
 		// Decide what to do and do what is needed to do
-		add.Decide(repoDB, name, description, version, buildFilesDir, importFile)
+		add.Decide(
+			repoDB,
+			name,
+			description,
+			version,
+			buildFilesDir,
+			archiveURL,
+			hash,
+			deps,
+			importFile,
+		)
 	},
 }
 
@@ -56,9 +74,6 @@ func init() { //nolint:gochecknoinits
 	// Package version
 	addCmd.Flags().StringVarP(&version, "version", "v", "", "Version of the package to add.")
 
-	// If name is used, then version should be used too
-	addCmd.MarkFlagsRequiredTogether("name", "version")
-
 	// Optional flag to specify build files location
 	addCmd.Flags().
 		StringVarP(&buildFilesDir, "files", "f", "", "Build files location.")
@@ -66,6 +81,19 @@ func init() { //nolint:gochecknoinits
 	// Optional flag to give a description of a package
 	addCmd.Flags().
 		StringVarP(&description, "desc", "d", "[No description provided for this package.]", "Description of the package to add.")
+
+	// Flag for a package's archive url
+	addCmd.Flags().StringVarP(&archiveURL, "archive", "a", "", "Package's archive URL to download.")
+
+	// Flag for a package's archive's sha512 hash
+	addCmd.Flags().StringVar(&hash, "hash", "", "Package's archive's sha512 hash.")
+
+	// If name is used, then version, archive and hash should be used too
+	addCmd.MarkFlagsRequiredTogether("name", "version", "archive", "hash")
+
+	// Flag for a package's dependencies
+	addCmd.Flags().
+		StringSliceVar(&dependencies, "deps", nil, "List of dependencies separated by a commas.")
 
 	// Flag to import a json file containing the record to add to the repo's db
 	addCmd.Flags().StringVarP(&importFile, "import", "i", "", "JSON file to import to the repo.")

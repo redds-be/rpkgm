@@ -12,7 +12,7 @@ import (
 )
 
 // importPkgs imports packages from a file to a repo.
-func ImportPkgs(importFile string, dbAdapter *database.Adapter) { //nolint:funlen
+func ImportPkgs(importFile string, dbAdapter *database.Adapter) { //nolint:funlen,cyclop
 	// Open the file to import
 	jsonPkgFile, err := os.Open(importFile)
 	if err != nil {
@@ -43,6 +43,30 @@ func ImportPkgs(importFile string, dbAdapter *database.Adapter) { //nolint:funle
 
 	// for every package in the json file, add it to the repo
 	for index := 0; index < len(pkgs.Packages); index++ {
+		// If there isn't an archive url, skip and print an error
+		if pkgs.Packages[index].ArchiveURL == "" {
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not find an archive URL for %s, skipping...",
+				pkgs.Packages[index].Name,
+			)
+
+			continue
+		}
+
+		// If there isn't a hash, skip and print an error
+		if pkgs.Packages[index].Sha512 == "" {
+			util.Display(
+				os.Stderr,
+				true,
+				"rpkgm could not find a hash for the archive for %s, skipping...",
+				pkgs.Packages[index].Name,
+			)
+
+			continue
+		}
+
 		// If there isn't a description, give one by default
 		if pkgs.Packages[index].Description == "" {
 			pkgs.Packages[index].Description = "[No description provided for this package.]"
@@ -68,6 +92,9 @@ func ImportPkgs(importFile string, dbAdapter *database.Adapter) { //nolint:funle
 			pkgs.Packages[index].Description,
 			pkgs.Packages[index].Version,
 			pkgs.Packages[index].BuildFilesDir,
+			pkgs.Packages[index].ArchiveURL,
+			pkgs.Packages[index].Sha512,
+			pkgs.Packages[index].Dependencies,
 		)
 		if err != nil {
 			util.Display(
@@ -88,7 +115,10 @@ func ImportPkgs(importFile string, dbAdapter *database.Adapter) { //nolint:funle
 }
 
 // addPkg adds a packages with its general information to a repo.
-func addPkg(name, description, version, buildFilesDir string, dbAdapter *database.Adapter) {
+func addPkg(
+	name, description, version, buildFilesDir, archiveURL, hash, deps string,
+	dbAdapter *database.Adapter,
+) {
 	// Default value for buildFilesDir (doing it here instead of Flags() because I need 'name')
 	if buildFilesDir == "" {
 		buildFilesDir = fmt.Sprintf("var/rpkgm/main/%s", name)
@@ -98,7 +128,7 @@ func addPkg(name, description, version, buildFilesDir string, dbAdapter *databas
 	buildFilesDir = strings.TrimSuffix(buildFilesDir, "/")
 
 	// Add the package to the main repo
-	err := dbAdapter.AddToRepo(name, description, version, buildFilesDir)
+	err := dbAdapter.AddToRepo(name, description, version, buildFilesDir, archiveURL, hash, deps)
 	if err != nil {
 		util.Display(
 			os.Stderr, true,
@@ -110,7 +140,9 @@ func addPkg(name, description, version, buildFilesDir string, dbAdapter *databas
 }
 
 // Decide decides what to do based on the given strings.
-func Decide(repoDB, name, description, version, buildFilesDir, importFile string) {
+func Decide(
+	repoDB, name, description, version, buildFilesDir, archiveURL, hash, deps, importFile string,
+) {
 	// Connect to the database
 	dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 	if err != nil {
@@ -137,7 +169,7 @@ func Decide(repoDB, name, description, version, buildFilesDir, importFile string
 
 	// add a package to the repo
 	if name != "" && version != "" {
-		addPkg(name, description, version, buildFilesDir, dbAdapter)
+		addPkg(name, description, version, buildFilesDir, archiveURL, hash, deps, dbAdapter)
 	}
 
 	// Close the database connection

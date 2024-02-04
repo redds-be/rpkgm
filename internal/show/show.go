@@ -121,7 +121,7 @@ func printAllinfo(dbAdapter *database.Adapter) {
 	}
 }
 
-// Decide decies what to do based on the given booleans.
+// Decide decides what to do based on the given booleans.
 func Decide(repoDB, name string, showLicense, showInfo, showAll bool) {
 	// Connect to the database
 	dbAdapter, err := database.NewAdapter("sqlite3", repoDB)

@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/redds-be/rpkgm/internal/manage"
 	"github.com/redds-be/rpkgm/internal/util"
@@ -31,6 +32,9 @@ var (
 	markUninstalled  bool
 	installedVersion string
 	repoVersion      string
+	archiveURL       string
+	hash             string
+	dependencies     []string
 	remove           bool
 )
 
@@ -43,7 +47,7 @@ var manageCmd = &cobra.Command{
 		// Check if user is root.
 		util.CheckRoot()
 
-		// Literally everything here needs a package's name, error if there isn't
+		// Literally everything here needs a package's name, error if there isn't one
 		if name == "" {
 			util.Display(
 				os.Stderr,
@@ -62,6 +66,12 @@ var manageCmd = &cobra.Command{
 			}
 		}
 
+		deps := ""
+		if len(dependencies) > 0 {
+			// Convert the dependencies list into a string
+			deps = strings.Join(dependencies, " ")
+		}
+
 		// Decide what to do and do what is needed to do
 		manage.Decide(
 			repoDB,
@@ -70,6 +80,9 @@ var manageCmd = &cobra.Command{
 			newDesc,
 			installedVersion,
 			repoVersion,
+			archiveURL,
+			hash,
+			deps,
 			remove,
 			markInstalled,
 			markUninstalled,
@@ -110,6 +123,17 @@ func init() { //nolint:gochecknoinits
 	// Flag to change a package's repo version in the db
 	manageCmd.Flags().
 		StringVar(&repoVersion, "rv", "", "Change a given package's repo version in the database.")
+
+	// Flag to change a package's archive URL
+	manageCmd.Flags().
+		StringVarP(&archiveURL, "archive", "a", "", "Change a given package's archive URL.")
+
+	// Flag to change a package's archive's hash
+	manageCmd.Flags().StringVar(&hash, "hash", "", "Change a given package's archive's hash.")
+
+	// Flag to change a package's dependencies
+	manageCmd.Flags().
+		StringSliceVar(&dependencies, "deps", nil, "List of dependencires separated by commas for a given package.")
 
 	// Flag to remove a package from the repo
 	manageCmd.Flags().BoolVar(&remove, "rm", false, "Remove a given package from the repository.")

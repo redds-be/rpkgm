@@ -49,7 +49,7 @@ func dlFromRemote(remote, repoName string) string {
 		os.Exit(1)
 	}
 
-	err = util.Untar(destDir, archive)
+	_, err = util.Untar(destDir, archive)
 	if err != nil {
 		util.Display(
 			os.Stderr,
@@ -110,12 +110,12 @@ func syncWithFile(importFile string, dbAdapter *database.Adapter) { //nolint:fun
 			continue
 		}
 
-		// If there isn't a description, give one by default
+		// If there isn't a description, give the previous one by default
 		if pkgs.Packages[index].Description == "" {
 			pkgs.Packages[index].Description = pkgInfo.Description
 		}
 
-		// If there isn't a build files dir, give one by default
+		// If there isn't a build files dir, give the previous one by default
 		if pkgs.Packages[index].BuildFilesDir == "" {
 			pkgs.Packages[index].BuildFilesDir = pkgInfo.BuildFilesDir
 		}
@@ -126,8 +126,24 @@ func syncWithFile(importFile string, dbAdapter *database.Adapter) { //nolint:fun
 			"/",
 		)
 
+		// If there isn't a repo version, give the previous one by default
 		if pkgs.Packages[index].Version == "" {
 			pkgs.Packages[index].Version = pkgInfo.RepoVersion
+		}
+
+		// If there isn't an archive url, give the previous one by default
+		if pkgs.Packages[index].ArchiveURL == "" {
+			pkgs.Packages[index].ArchiveURL = pkgInfo.ArchiveURL
+		}
+
+		// If there isn't an archive's hash, give the previous one by default
+		if pkgs.Packages[index].Sha512 == "" {
+			pkgs.Packages[index].Sha512 = pkgInfo.Sha512
+		}
+
+		// If there isn't a dependencies list, give the previous one by default
+		if pkgs.Packages[index].Dependencies == "" {
+			pkgs.Packages[index].Dependencies = pkgInfo.Dependencies
 		}
 
 		// Add the package to the repo
@@ -136,6 +152,9 @@ func syncWithFile(importFile string, dbAdapter *database.Adapter) { //nolint:fun
 			pkgs.Packages[index].Description,
 			pkgs.Packages[index].Version,
 			pkgs.Packages[index].BuildFilesDir,
+			pkgs.Packages[index].ArchiveURL,
+			pkgs.Packages[index].Sha512,
+			pkgs.Packages[index].Dependencies,
 		)
 		if err != nil {
 			util.Display(

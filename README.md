@@ -65,10 +65,7 @@ Just wanted to create my own package manager because why not?
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Import records from a file into the database.
-- [ ] Logging.
 - [ ] Update packages.
-- [ ] Manage dependencies.
 - [ ] Use a config file.
 - [ ] Write documentation.
 
