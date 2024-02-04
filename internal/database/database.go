@@ -28,6 +28,9 @@ type Package struct {
 	Description   string `json:"description"`
 	Version       string `json:"version"`
 	BuildFilesDir string `json:"buildFilesDir"`
+	ArchiveURL    string `json:"archiveUrl"`
+	Sha512        string `json:"sha512"`
+	Dependencies  string `json:"dependencies"`
 }
 
 // Packages defines a slice of package.
@@ -43,6 +46,9 @@ type PkgInfo struct {
 	InstalledVersion string
 	Installed        bool
 	BuildFilesDir    string
+	ArchiveURL       string
+	Sha512           string
+	Dependencies     string
 }
 
 // Adapter implements the DBPort interface.
@@ -83,7 +89,10 @@ func (dbAdapter Adapter) CreatePkgTable() error {
     repoVersion VARCHAR(16) NOT NULL,
     installedVersion VARCHAR(16),
     installed BOOLEAN NOT NULL,
-    buildFilesDir VARCHAR(4096) NOT NULL
+    buildFilesDir VARCHAR(4096) NOT NULL,
+    archiveURL VARCHAR(8000) NOT NULL,
+    sha512 VARCHAR(128) NOT NULL,
+    dependencies VARCHAR(8000) NOT NULL
     );`
 	_, err := dbAdapter.dbase.Exec(queryString)
 
@@ -91,8 +100,10 @@ func (dbAdapter Adapter) CreatePkgTable() error {
 }
 
 // AddToRepo adds a package to the package table in the repo.
-func (dbAdapter Adapter) AddToRepo(name, description, repoVersion, buildFilesDir string) error {
-	const queryString = `INSERT INTO packages VALUES ($1, $2, $3, $4, $5, $6);`
+func (dbAdapter Adapter) AddToRepo(
+	name, description, repoVersion, buildFilesDir, archiveURL, hash, dependencies string,
+) error {
+	const queryString = `INSERT INTO packages VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`
 	_, err := dbAdapter.dbase.Exec(
 		queryString,
 		name,
@@ -101,26 +112,68 @@ func (dbAdapter Adapter) AddToRepo(name, description, repoVersion, buildFilesDir
 		"",
 		false,
 		buildFilesDir,
+		archiveURL,
+		hash,
+		dependencies,
 	)
 
 	return err
 }
 
 // SyncRepo syncs packages in the database (using the name as the key).
-func (dbAdapter Adapter) SyncRepo(name, description, repoVersion, buildFilesDir string) error {
-	const queryString = `UPDATE packages SET description = $1, repoVersion = $2, buildFilesDir = $3 WHERE name = $4;`
-	_, err := dbAdapter.dbase.Exec(queryString, description, repoVersion, buildFilesDir, name)
+func (dbAdapter Adapter) SyncRepo(
+	name, description, repoVersion, buildFilesDir, archiveURL, hash, dependencies string,
+) error {
+	const queryString = `UPDATE packages SET
+        description = $1,
+        repoVersion = $2,
+        buildFilesDir = $3,
+        archiveURL = $4,
+        sha512 = $5,
+        dependencies = $6 
+        WHERE name = $7;`
+
+	_, err := dbAdapter.dbase.Exec(
+		queryString,
+		description,
+		repoVersion,
+		buildFilesDir,
+		archiveURL,
+		hash,
+		dependencies,
+		name,
+	)
 
 	return err
 }
 
 // GetPkgInfo returns the basic information about a given package.
 func (dbAdapter Adapter) GetPkgInfo(name string) (PkgInfo, error) {
-	const queryString = `SELECT name, description, repoVersion, installedVersion, installed, buildFilesDir FROM packages WHERE name = $1;`
+	const queryString = `SELECT
+        name,
+        description,
+        repoVersion,
+        installedVersion,
+        installed,
+        buildFilesDir,
+        archiveURL,
+        sha512,
+        dependencies
+        FROM packages WHERE name = $1;`
+
 	var info PkgInfo
 
-	err := dbAdapter.dbase.QueryRow(queryString, name).
-		Scan(&info.Name, &info.Description, &info.RepoVersion, &info.InstalledVersion, &info.Installed, &info.BuildFilesDir)
+	err := dbAdapter.dbase.QueryRow(queryString, name).Scan(
+		&info.Name,
+		&info.Description,
+		&info.RepoVersion,
+		&info.InstalledVersion,
+		&info.Installed,
+		&info.BuildFilesDir,
+		&info.ArchiveURL,
+		&info.Sha512,
+		&info.Dependencies,
+	)
 	if err != nil {
 		return PkgInfo{}, err
 	}
@@ -130,7 +183,18 @@ func (dbAdapter Adapter) GetPkgInfo(name string) (PkgInfo, error) {
 
 // GetAllPkgInfo returns the basic information about all packages in the repo.
 func (dbAdapter Adapter) GetAllPkgInfo() ([]PkgInfo, error) {
-	const queryString = `SELECT name, description, repoVersion, installedVersion, installed, buildFilesDir FROM packages;`
+	const queryString = `SELECT
+        name,
+        description,
+        repoVersion,
+        installedVersion,
+        installed,
+        buildFilesDir,
+        archiveURL,
+        sha512,
+        dependencies
+        FROM packages;`
+
 	var infos []PkgInfo
 
 	// Get the row results of the query
@@ -158,6 +222,9 @@ func (dbAdapter Adapter) GetAllPkgInfo() ([]PkgInfo, error) {
 			&info.InstalledVersion,
 			&info.Installed,
 			&info.BuildFilesDir,
+			&info.ArchiveURL,
+			&info.Sha512,
+			&info.Dependencies,
 		)
 		infos = append(infos, info)
 	}
@@ -294,6 +361,42 @@ func (dbAdapter Adapter) RemovePackage(name string) error {
 	const queryString = `DELETE FROM packages WHERE name = $1;`
 
 	_, err := dbAdapter.dbase.Exec(queryString, name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ChangeArchiveURL changes the archive url.
+func (dbAdapter Adapter) ChangeArchiveURL(name, archiveURL string) error {
+	const queryString = `UPDATE packages SET archiveURL = $1 WHERE name = $2;`
+
+	_, err := dbAdapter.dbase.Exec(queryString, archiveURL, name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ChangeHash changes an archive's hash.
+func (dbAdapter Adapter) ChangeHash(name, hash string) error {
+	const queryString = `UPDATE packages SET sha512 = $1 WHERE name = $2;`
+
+	_, err := dbAdapter.dbase.Exec(queryString, hash, name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ChangeDeps changes a package's dependencies list.
+func (dbAdapter Adapter) ChangeDeps(name, dependencies string) error {
+	const queryString = `UPDATE packages SET dependencies = $1 WHERE name = $2;`
+
+	_, err := dbAdapter.dbase.Exec(queryString, dependencies, name)
 	if err != nil {
 		return err
 	}

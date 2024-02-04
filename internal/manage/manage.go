@@ -105,6 +105,48 @@ func changeRepoVersion(name, repoVersion string, dbAdapter *database.Adapter) {
 	}
 }
 
+// changeArchiveURL changes the package's archive's URL.
+func changeArchiveURL(name, achiveURL string, dbAdapter *database.Adapter) {
+	err := dbAdapter.ChangeArchiveURL(name, achiveURL)
+	if err != nil {
+		util.Display(
+			os.Stderr,
+			true,
+			"rpkgm could not change the package's archive's URL. Error: %s",
+			err,
+		)
+		os.Exit(1)
+	}
+}
+
+// changeArchiveHash changes the package's archive's hash.
+func changeArchiveHash(name, hash string, dbAdapter *database.Adapter) {
+	err := dbAdapter.ChangeHash(name, hash)
+	if err != nil {
+		util.Display(
+			os.Stderr,
+			true,
+			"rpkgm could not change the package's archive's hash. Error: %s",
+			err,
+		)
+		os.Exit(1)
+	}
+}
+
+// changePkgDeps changes the package's deps.
+func changePkgDeps(name, deps string, dbAdapter *database.Adapter) {
+	err := dbAdapter.ChangeDeps(name, deps)
+	if err != nil {
+		util.Display(
+			os.Stderr,
+			true,
+			"rpkgm could not change the package's dependencies list. Error: %s",
+			err,
+		)
+		os.Exit(1)
+	}
+}
+
 // rename renames a package.
 func rename(name, newName string, dbAdapter *database.Adapter) {
 	err := dbAdapter.RenamePackage(name, newName)
@@ -119,9 +161,9 @@ func rename(name, newName string, dbAdapter *database.Adapter) {
 	}
 }
 
-// Decide decies what to do based on the given booleans.
+// Decide decides what to do based on the given booleans.
 func Decide( //nolint:funlen,cyclop
-	repoDB, name, newName, newDesc, installedVersion, repoVersion string,
+	repoDB, name, newName, newDesc, installedVersion, repoVersion, archiveURL, hash, deps string,
 	doRemove, markInstalled, markNotInstalled bool,
 ) {
 	// Connect to the database
@@ -175,6 +217,21 @@ func Decide( //nolint:funlen,cyclop
 	// Change the package's repo version
 	if repoVersion != "" {
 		changeRepoVersion(name, repoVersion, dbAdapter)
+	}
+
+	// Change the package's archive's URL
+	if archiveURL != "" {
+		changeArchiveURL(name, archiveURL, dbAdapter)
+	}
+
+	// Change the package's archive's hash
+	if hash != "" {
+		changeArchiveHash(name, hash, dbAdapter)
+	}
+
+	// Change the package's dependencies list
+	if deps != "" {
+		changePkgDeps(name, deps, dbAdapter)
 	}
 
 	// Rename the package

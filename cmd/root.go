@@ -31,6 +31,7 @@ var (
 	keep        bool
 	force       bool
 	yes         bool
+	resolve     bool
 	repoDB      string
 )
 
@@ -43,9 +44,10 @@ This program comes with ABSOLUTELY NO WARRANTY; for details type 'rpkgm show -w'
 This is free software, and you are welcome to redistribute it
 under certain conditions; see <https://www.gnu.org/licenses/gpl-3.0.html>.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(toInstall) > 0 || len(toUninstall) > 0 {
-			// Send everything to pkg.Manage (not a fan of this, will change later)
-			pkg.Manage(toInstall, toUninstall, verbose, keep, force, yes, repoDB)
+		if len(toInstall) > 0 {
+			pkg.Decide(true, force, verbose, keep, yes, resolve, toInstall, repoDB)
+		} else if len(toUninstall) > 0 {
+			pkg.Decide(false, force, verbose, keep, yes, resolve, toUninstall, repoDB)
 		} else {
 			err := cmd.Help()
 			if err != nil {
@@ -91,6 +93,10 @@ func init() { //nolint:gochecknoinits
 
 	// Flag to indicate there is no need for confirmation
 	rootCmd.Flags().BoolVarP(&yes, "yes", "y", false, "Do not ask before installing/uninstalling.")
+
+	// Flag to indicate whether we try to resolve dependencies
+	rootCmd.Flags().
+		BoolVar(&resolve, "resolve", false, "Resolve dependencies (experimental feature, disabled by default).")
 
 	// Optional flag to specify repo database location
 	rootCmd.Flags().

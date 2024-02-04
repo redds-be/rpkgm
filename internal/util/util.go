@@ -20,6 +20,9 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"crypto/sha512"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -106,17 +109,53 @@ func Download(dest, url string) error {
 	return err
 }
 
-func Untar(destDir, archive string) error { //nolint:cyclop
+// Verify verifies the sha512 hash of a file.
+func Verify(fileToVerify, supposedHash string) (bool, error) {
+	// Open the file to verify
+	file, err := os.Open(fileToVerify)
+	if err != nil {
+		return false, err
+	}
+
+	// Create the hash of the file
+	hash := sha512.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return false, err
+	}
+
+	// Close the file
+	if err = file.Close(); err != nil {
+		return false, err
+	}
+
+	// Convert the hash to a hex string
+	hexHash := hex.EncodeToString(hash.Sum(nil))
+
+	// Compare the hashes
+	if hexHash == supposedHash {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// Untar untars a tar.gz tarball.
+func Untar(destDir, archive string) (string, error) { //nolint:cyclop,funlen
+	archiveParentDir := ""
+
+	// Open the tarball
 	tarFile, err := os.Open(archive)
 	if err != nil {
-		return err
+		return "", err
 	}
 
+	// Create a reader to gunzip the tarball
 	gzipReader, err := gzip.NewReader(tarFile)
 	if err != nil {
-		return err
+		return "", err
 	}
 
+	// Create a reader for the tarball
 	tarReader := tar.NewReader(gzipReader)
 
 	for {
@@ -126,30 +165,44 @@ func Untar(destDir, archive string) error { //nolint:cyclop
 		}
 
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
+			if archiveParentDir == "" {
+				archiveParentDir = fmt.Sprintf("%s/%s", destDir, header.Name)
+			}
+			// If the header indicates a dir, create it
 			if err := os.MkdirAll(fmt.Sprintf("%s/%s", destDir, header.Name), os.ModePerm); err != nil {
-				return err
+				return "", err
 			}
 		case tar.TypeReg:
+			// If the header indicates a file, create the destination file
 			outFile, err := os.Create(fmt.Sprintf("%s/%s", destDir, header.Name))
 			if err != nil {
-				return err
-			}
-			if _, err := io.Copy(outFile, tarReader); err != nil { //nolint:gosec
-				return err
+				return "", err
 			}
 
+			// Copy the file from the tarball to the newly created file
+			if _, err := io.Copy(outFile, tarReader); err != nil { //nolint:gosec
+				return "", err
+			}
+			if err != nil {
+				return "", err
+			}
+
+			// Close the file
 			err = outFile.Close()
 			if err != nil {
-				return err
+				return "", err
 			}
-
+		case 103: //nolint:gomnd
+			// Just ignore a weird header unique to GitHub release tarball
+			continue
 		default:
-			return fmt.Errorf( //nolint:goerr113
+			// If it's neither a file nor a dir, what the f is it?
+			return "", fmt.Errorf( //nolint:goerr113
 				"unknown type: %v in %v",
 				header.Typeflag,
 				header.Name,
@@ -157,12 +210,57 @@ func Untar(destDir, archive string) error { //nolint:cyclop
 		}
 	}
 
+	// Close the tarball
 	err = tarFile.Close()
+	if err != nil {
+		return "", err
+	}
+
+	// Close the gzip reader
+	err = gzipReader.Close()
+
+	return archiveParentDir, err
+}
+
+// Copy copies a file (src) to a new one (dst).
+func Copy(src, dst string, overwrite bool) error {
+	// If we want to overwrite
+	if overwrite {
+		// Check if the dst already exists, remove it if it exists
+		if _, err := os.Stat(dst); !errors.Is(err, os.ErrNotExist) {
+			err = os.Remove(dst)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Open the source file
+	source, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 
-	err = gzipReader.Close()
+	// Create the destination file
+	destination, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+
+	// Copy the source file into the destination file
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		return err
+	}
+
+	// Close the source file
+	err = source.Close()
+	if err != nil {
+		return err
+	}
+
+	// Close the destination file
+	err = destination.Close()
 
 	return err
 }
