@@ -232,6 +232,57 @@ func (dbAdapter Adapter) GetAllPkgInfo() ([]PkgInfo, error) {
 	return infos, err
 }
 
+// GetInstalledPkgInfo returns the basic information about every installed packages in the repo.
+func (dbAdapter Adapter) GetInstalledPkgInfo() ([]PkgInfo, error) {
+	const queryString = `SELECT
+        name,
+        description,
+        repoVersion,
+        installedVersion,
+        installed,
+        buildFilesDir,
+        archiveURL,
+        sha512,
+        dependencies
+        FROM packages WHERE installed = 1;`
+
+	var infos []PkgInfo
+
+	// Get the row results of the query
+	rows, err := dbAdapter.dbase.Query(queryString) //nolint:sqlclosecheck
+	if err != nil {
+		return nil, err
+	}
+
+	// Defer the closing of the rows
+	defer func(rows *sql.Rows) {
+		err = rows.Close()
+	}(rows)
+
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	// For each row, append to info
+	for rows.Next() {
+		var info PkgInfo
+		err = rows.Scan(
+			&info.Name,
+			&info.Description,
+			&info.RepoVersion,
+			&info.InstalledVersion,
+			&info.Installed,
+			&info.BuildFilesDir,
+			&info.ArchiveURL,
+			&info.Sha512,
+			&info.Dependencies,
+		)
+		infos = append(infos, info)
+	}
+
+	return infos, err
+}
+
 // RenamePackage renames a given package.
 func (dbAdapter Adapter) RenamePackage(oldName, newName string) error {
 	const queryString = `UPDATE packages SET name = $1 WHERE name = $2;`
@@ -263,19 +314,6 @@ func (dbAdapter Adapter) GetPkgBuildFilesDir(name string) (string, error) {
 	}
 
 	return buildFilesDir, nil
-}
-
-// GetRepoVersion returns the repo's version of a given package from the repo.
-func (dbAdapter Adapter) GetRepoVersion(name string) (string, error) {
-	const queryString = `SELECT repoVersion FROM packages WHERE name = $1;`
-	var version string
-
-	err := dbAdapter.dbase.QueryRow(queryString, name).Scan(&version)
-	if err != nil {
-		return "", err
-	}
-
-	return version, nil
 }
 
 // SetInstalledVersion sets the installed version for a package.
