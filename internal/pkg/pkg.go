@@ -459,7 +459,7 @@ func Decide( //nolint:funlen,gocognit,cyclop
 	repoDB string,
 ) {
 	// Check if the user is root
-	util.CheckRoot()
+	util.CheckRoot("Please run rpkgm as root.")
 
 	// Connect to the database
 	dbAdapter, err := database.NewAdapter("sqlite3", repoDB)

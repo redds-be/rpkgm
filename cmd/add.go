@@ -40,7 +40,7 @@ var addCmd = &cobra.Command{
 	Long:  `Add a package to the main repo (one at a time), using it's name and current version.'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if user is root.
-		util.CheckRoot()
+		util.CheckRoot("Please run rpkgm add as root.")
 
 		deps := ""
 		if len(dependencies) > 0 {

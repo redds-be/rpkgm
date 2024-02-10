@@ -45,7 +45,7 @@ var manageCmd = &cobra.Command{
 	Long:  `Manage a given package using package's information in a given (or the default) repository.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if user is root.
-		util.CheckRoot()
+		util.CheckRoot("Please run rpkgm manage as root.")
 
 		// Literally everything here needs a package's name, error if there isn't one
 		if name == "" {

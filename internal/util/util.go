@@ -41,7 +41,7 @@ var (
 )
 
 // CheckRoot checks if the user is root.
-func CheckRoot() {
+func CheckRoot(message string) {
 	currUser, err := user.Current()
 	if err != nil {
 		Display(os.Stderr, true, "Unable to determine if rpkgm is running as root. Error: %s", err)
@@ -49,7 +49,7 @@ func CheckRoot() {
 	}
 
 	if currUser.Uid != "0" {
-		Display(os.Stderr, false, "Please run rpkgm as root.")
+		Display(os.Stderr, false, message)
 		os.Exit(1)
 	}
 }
