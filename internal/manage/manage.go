@@ -176,7 +176,7 @@ func Decide( //nolint:funlen,cyclop
 	// Check if the given package is in the repo (forcing the close of the db connection since it's not a fatal error)
 	isInRepo, _ := dbAdapter.IsPkgInRepo(name)
 	if !isInRepo {
-		util.Display(os.Stderr, true, "The package: %s is not in the repository.", name)
+		util.Display(os.Stderr, true, "The package: %s is not in the repository.")
 
 		// Close the database connection
 		err := dbAdapter.CloseDBConnection()

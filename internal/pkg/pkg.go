@@ -13,8 +13,8 @@ import (
 	"github.com/redds-be/rpkgm/internal/util"
 )
 
-// Global slice that contains the name of packages marked for an operation.
-var markedPkgs []string
+// MarkedPkgs is a slice that contains the name of the packages marked for an operation.
+var MarkedPkgs []string
 
 // resolveDeps recursively resolves the dependencies of a slice of dependencies and marks them for installation.
 func resolveDeps(mainPkgName string, deps []string, dbAdapter *database.Adapter) { //nolint:funlen
@@ -68,7 +68,7 @@ func resolveDeps(mainPkgName string, deps []string, dbAdapter *database.Adapter)
 		}
 
 		// Check if the dependency is a duplicate
-		isDuplicate := slices.Contains(markedPkgs, pkgName)
+		isDuplicate := slices.Contains(MarkedPkgs, pkgName)
 
 		// If the dependency is in the repo, is not already installed and is not a duplicate,
 		// resolve its dependencies and mark de dependency for installation
@@ -77,16 +77,16 @@ func resolveDeps(mainPkgName string, deps []string, dbAdapter *database.Adapter)
 			if len(moreDeps) > 0 {
 				resolveDeps(pkgName, moreDeps, dbAdapter)
 			}
-			markedPkgs = append(markedPkgs, pkgName)
+			MarkedPkgs = append(MarkedPkgs, pkgName)
 			util.Display(os.Stdout, true, "Installing %s=%s", pkgName, pkgInfo.RepoVersion)
 		}
 	}
 }
 
-// ask asks before doing any operation.
-func ask(dbAdapter *database.Adapter) {
+// Ask asks before doing any operation.
+func Ask(dbAdapter *database.Adapter) {
 	// If there are marked packages, ask, else, just quit
-	if len(markedPkgs) > 0 { //nolint:nestif
+	if len(MarkedPkgs) > 0 { //nolint:nestif
 		var choice string
 
 		// Ask the user's confirmation
@@ -143,8 +143,8 @@ func ask(dbAdapter *database.Adapter) {
 	os.Exit(0)
 }
 
-// install installs a package.
-func install( //nolint:funlen,cyclop
+// Install installs a package.
+func Install( //nolint:funlen,cyclop
 	pkgInfo database.PkgInfo,
 	index, total int,
 	verbose, keep, force bool,
@@ -154,6 +154,18 @@ func install( //nolint:funlen,cyclop
 	destDir := fmt.Sprintf("/tmp/rpkgm/%s", pkgInfo.Name)
 	if keep {
 		destDir = fmt.Sprintf("/tmp/usr/src/rpkgm/%s", pkgInfo.Name)
+	}
+
+	// Remove the destination directory if it already exists
+	if _, err := os.Stat(destDir); !os.IsNotExist(err) {
+		err := os.RemoveAll(destDir)
+		if err != nil {
+			return fmt.Errorf(
+				"rpkgm was unable to pre-clean the build directory of %s, Error: %w",
+				pkgInfo.Name,
+				err,
+			)
+		}
 	}
 
 	// Create the destination directory
@@ -446,6 +458,9 @@ func Decide( //nolint:funlen,gocognit,cyclop
 	packageList []string,
 	repoDB string,
 ) {
+	// Check if the user is root
+	util.CheckRoot()
+
 	// Connect to the database
 	dbAdapter, err := database.NewAdapter("sqlite3", repoDB)
 	if err != nil {
@@ -523,7 +538,7 @@ func Decide( //nolint:funlen,gocognit,cyclop
 			}
 			util.Display(os.Stdout, true, "Installing %s=%s", pkgName, pkgInfo.RepoVersion)
 			// Mark the package for installation
-			markedPkgs = append(markedPkgs, pkgName)
+			MarkedPkgs = append(MarkedPkgs, pkgName)
 			// Case the operation is installing and the package is not installed
 		case doInstall && !isInstalled:
 			// If the experimental resolve feature is set, resolve its deps
@@ -540,7 +555,7 @@ func Decide( //nolint:funlen,gocognit,cyclop
 			}
 			util.Display(os.Stdout, true, "Installing %s=%s", pkgName, pkgInfo.RepoVersion)
 			// Mark the package for installation
-			markedPkgs = append(markedPkgs, pkgName)
+			MarkedPkgs = append(MarkedPkgs, pkgName)
 			// Case the operation is uninstallation and the package is not installed, we skip it
 		case !doInstall && !isInstalled:
 			util.Display(
@@ -554,7 +569,7 @@ func Decide( //nolint:funlen,gocognit,cyclop
 			// Case the operation is uninstallation and the package is installed, we mark it for uninstallation
 		case !doInstall && isInstalled:
 			util.Display(os.Stdout, true, "Uninstalling %s=%s", pkgName, pkgInfo.RepoVersion)
-			markedPkgs = append(markedPkgs, pkgName)
+			MarkedPkgs = append(MarkedPkgs, pkgName)
 			// Case I don't know what the f to do based on the given information
 		default:
 			util.Display(
@@ -570,10 +585,10 @@ func Decide( //nolint:funlen,gocognit,cyclop
 
 	// If --yes/-y is not set, we ask before doing anything
 	if !yes {
-		ask(dbAdapter)
+		Ask(dbAdapter)
 	}
 
-	for index, pkgName := range markedPkgs {
+	for index, pkgName := range MarkedPkgs {
 		// Get the general information of the marked package
 		pkgInfo, err := dbAdapter.GetPkgInfo(pkgName)
 		if err != nil {
@@ -589,7 +604,7 @@ func Decide( //nolint:funlen,gocognit,cyclop
 
 		// If the operation is installation, call install
 		if doInstall {
-			err = install(pkgInfo, index+1, len(markedPkgs), verbose, keep, force, dbAdapter)
+			err = Install(pkgInfo, index+1, len(MarkedPkgs), verbose, keep, force, dbAdapter)
 			if err != nil {
 				util.Display(os.Stderr, true, "%s", err)
 			}
@@ -597,7 +612,7 @@ func Decide( //nolint:funlen,gocognit,cyclop
 
 		// If the operation is uninstallation, call uninstall
 		if !doInstall {
-			err = uninstall(pkgInfo, index+1, len(markedPkgs), verbose, keep, dbAdapter)
+			err = uninstall(pkgInfo, index+1, len(MarkedPkgs), verbose, keep, dbAdapter)
 			if err != nil {
 				util.Display(os.Stderr, true, "%s", err)
 			}

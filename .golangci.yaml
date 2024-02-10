@@ -43,6 +43,7 @@ linters-settings:
           - github.com/redds-be/rpkgm/internal/manage
           - github.com/redds-be/rpkgm/internal/add
           - github.com/redds-be/rpkgm/internal/sync
+          - github.com/redds-be/rpkgm/internal/update
           - github.com/spf13/cobra
           - github.com/google/uuid
           - github.com/mattn/go-sqlite3

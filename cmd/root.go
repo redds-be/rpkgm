@@ -100,5 +100,5 @@ func init() { //nolint:gochecknoinits
 
 	// Optional flag to specify repo database location
 	rootCmd.Flags().
-		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main/main.db", "Specify repo Database location")
+		StringVarP(&repoDB, "repo", "r", "var/rpkgm/main/main.db", "Specify repo Database location.")
 }
