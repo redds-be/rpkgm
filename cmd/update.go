@@ -37,12 +37,12 @@ var updateCmd = &cobra.Command{
 		// else = update = only check updates
 		if len(updateList) > 0 {
 			// Check if the user is root
-			util.CheckRoot()
+			util.CheckRoot("Please run rpkgm update as root.")
 
 			update.Decide(repoDB, updateList, all, false, verbose, yes, keep)
 		} else if all {
 			// Check if the user is root
-			util.CheckRoot()
+			util.CheckRoot("Please run rpkgm update as root.")
 
 			update.Decide(repoDB, nil, true, false, verbose, yes, keep)
 		} else {

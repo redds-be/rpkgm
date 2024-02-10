@@ -33,7 +33,7 @@ var syncCmd = &cobra.Command{
 	Short: "Sync the main or a specified repo.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check if user is root.
-		util.CheckRoot()
+		util.CheckRoot("Please run rpkgm sync as root.")
 
 		// Decide what to do and do what is needed to do
 		sync.Decide(repoDB, importFile, remote, repoName)
