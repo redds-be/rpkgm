@@ -28,7 +28,7 @@ func checkUpdate(installPkgsInfo []database.PkgInfo) {
 
 	// If there isn't any update, also inform the user
 	if !isThereAnUpdate {
-		util.Display(os.Stdout, true, "No new updates available.")
+		util.Display(os.Stdout, false, "No new updates available.")
 	}
 }
 
