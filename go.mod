@@ -19,7 +19,7 @@ module github.com/redds-be/rpkgm
 go 1.22
 
 require (
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mattn/go-sqlite3 v1.14.23
 	github.com/spf13/cobra v1.8.1
 )
 
